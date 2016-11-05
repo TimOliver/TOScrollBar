@@ -42,6 +42,7 @@
 		222F87AE1DCE453B0068DE2F = {
 			isa = PBXGroup;
 			children = (
+				223B9BF41DCE487A008601D2 /* TOScrollBar */,
 				222F87B91DCE453B0068DE2F /* TOScrollBarExample */,
 				222F87B81DCE453B0068DE2F /* Products */,
 			);
@@ -77,6 +78,13 @@
 				222F87BB1DCE453B0068DE2F /* main.m */,
 			);
 			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		223B9BF41DCE487A008601D2 /* TOScrollBar */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = TOScrollBar;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -312,6 +320,7 @@
 				222F87D01DCE453B0068DE2F /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
