@@ -13,6 +13,7 @@
 		222F87C51DCE453B0068DE2F /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 222F87C31DCE453B0068DE2F /* Main.storyboard */; };
 		222F87C71DCE453B0068DE2F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 222F87C61DCE453B0068DE2F /* Assets.xcassets */; };
 		222F87CA1DCE453B0068DE2F /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 222F87C81DCE453B0068DE2F /* LaunchScreen.storyboard */; };
+		223B9BF71DCE496F008601D2 /* TOScrollBar.m in Sources */ = {isa = PBXBuildFile; fileRef = 223B9BF61DCE496F008601D2 /* TOScrollBar.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -26,6 +27,8 @@
 		222F87C61DCE453B0068DE2F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		222F87C91DCE453B0068DE2F /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		222F87CB1DCE453B0068DE2F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		223B9BF51DCE496F008601D2 /* TOScrollBar.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TOScrollBar.h; sourceTree = "<group>"; };
+		223B9BF61DCE496F008601D2 /* TOScrollBar.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TOScrollBar.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -83,6 +86,8 @@
 		223B9BF41DCE487A008601D2 /* TOScrollBar */ = {
 			isa = PBXGroup;
 			children = (
+				223B9BF51DCE496F008601D2 /* TOScrollBar.h */,
+				223B9BF61DCE496F008601D2 /* TOScrollBar.m */,
 			);
 			path = TOScrollBar;
 			sourceTree = "<group>";
@@ -162,6 +167,7 @@
 				222F87C21DCE453B0068DE2F /* ViewController.m in Sources */,
 				222F87BF1DCE453B0068DE2F /* AppDelegate.m in Sources */,
 				222F87BC1DCE453B0068DE2F /* main.m in Sources */,
+				223B9BF71DCE496F008601D2 /* TOScrollBar.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
