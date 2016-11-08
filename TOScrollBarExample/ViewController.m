@@ -17,6 +17,7 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+    self.tableView.separatorInset = UIEdgeInsetsMake(0, 20, 0, 20);
     
     TOScrollBar *scrollBar = [[TOScrollBar alloc] init];
     [scrollBar addToScrollView:self.tableView];
@@ -24,7 +25,7 @@
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
 {
-    return 1000;
+    return 10000;
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
@@ -34,9 +35,11 @@
     if (cell == nil) {
         cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:identifier];
         cell.selectionStyle = UITableViewCellSelectionStyleNone;
+        cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
     }
     
     cell.textLabel.text = [NSString stringWithFormat:@"Cell %ld", indexPath.row+1];
+    cell.layoutMargins = UIEdgeInsetsMake(0, 0, 0, 35);
     return cell;
 }
 

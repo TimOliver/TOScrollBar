@@ -14,6 +14,7 @@
 		222F87C71DCE453B0068DE2F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 222F87C61DCE453B0068DE2F /* Assets.xcassets */; };
 		222F87CA1DCE453B0068DE2F /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 222F87C81DCE453B0068DE2F /* LaunchScreen.storyboard */; };
 		223B9BF71DCE496F008601D2 /* TOScrollBar.m in Sources */ = {isa = PBXBuildFile; fileRef = 223B9BF61DCE496F008601D2 /* TOScrollBar.m */; };
+		22CCCCD11DD064B90092A89D /* UIScrollView+TOScrollBar.m in Sources */ = {isa = PBXBuildFile; fileRef = 22CCCCD01DD064B90092A89D /* UIScrollView+TOScrollBar.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -29,6 +30,8 @@
 		222F87CB1DCE453B0068DE2F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		223B9BF51DCE496F008601D2 /* TOScrollBar.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TOScrollBar.h; sourceTree = "<group>"; };
 		223B9BF61DCE496F008601D2 /* TOScrollBar.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TOScrollBar.m; sourceTree = "<group>"; };
+		22CCCCCF1DD064B90092A89D /* UIScrollView+TOScrollBar.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIScrollView+TOScrollBar.h"; sourceTree = "<group>"; };
+		22CCCCD01DD064B90092A89D /* UIScrollView+TOScrollBar.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIScrollView+TOScrollBar.m"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -88,6 +91,8 @@
 			children = (
 				223B9BF51DCE496F008601D2 /* TOScrollBar.h */,
 				223B9BF61DCE496F008601D2 /* TOScrollBar.m */,
+				22CCCCCF1DD064B90092A89D /* UIScrollView+TOScrollBar.h */,
+				22CCCCD01DD064B90092A89D /* UIScrollView+TOScrollBar.m */,
 			);
 			path = TOScrollBar;
 			sourceTree = "<group>";
@@ -118,7 +123,7 @@
 		222F87AF1DCE453B0068DE2F /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0810;
+				LastUpgradeCheck = 0820;
 				ORGANIZATIONNAME = "Tim Oliver";
 				TargetAttributes = {
 					222F87B61DCE453B0068DE2F = {
@@ -168,6 +173,7 @@
 				222F87BF1DCE453B0068DE2F /* AppDelegate.m in Sources */,
 				222F87BC1DCE453B0068DE2F /* main.m in Sources */,
 				223B9BF71DCE496F008601D2 /* TOScrollBar.m in Sources */,
+				22CCCCD11DD064B90092A89D /* UIScrollView+TOScrollBar.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -211,6 +217,7 @@
 				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_SUSPICIOUS_MOVES = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
@@ -259,6 +266,7 @@
 				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_SUSPICIOUS_MOVES = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
