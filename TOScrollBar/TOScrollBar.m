@@ -22,19 +22,21 @@
 
 #import "TOScrollBar.h"
 
-static const CGFloat kTOScrollBarTrackWidth = 2.0f;
-static const CGFloat kTOScrollBarHandleWidth = 4.0f;
-static const CGFloat kTOScrollBarHandleMinHeight = 70.0f;
-static const CGFloat kTOScrollBarWidth = 44.0f;
-static const CGFloat kTOScrollBarMaxHeight = 450.0f;
-static const CGFloat kTOScrollBarVerticalPadding = 20.0f;
+static const CGFloat kTOScrollBarTrackWidth     = 1.0f;     // The default width of the scrollable space indicator
+static const CGFloat kTOScrollBarHandleWidth    = 3.0f;     // The default width of the handle control
+static const CGFloat kTOScrollBarRightMargin    = 8.0f;     // The distance from the right side of the view to the center of the track
+static const CGFloat kTOScrollBarHandleMinHeight = 70.0f;   // The minimum size the handle may shrink to
+static const CGFloat kTOScrollBarWidth          = 20.0f;    // The width of this control (44 is minimum recommended tapping space)
+static const CGFloat kTOScrollBarVerticalPadding = 20.0f;   // The default padding at the top and bottom of the view
 
-@interface TOScrollBar ()
+@interface TOScrollBar () <UIGestureRecognizerDelegate>
 
 @property (nonatomic, weak) UIScrollView *scrollView;
 
-@property (nonatomic, strong) UIImageView *trackView; // The track indicating the scrollable distance
+@property (nonatomic, strong) UIImageView *trackView;  // The track indicating the scrollable distance
 @property (nonatomic, strong) UIImageView *handleView; // The handle that may be dragged in the scroll bar
+
+@property (nonatomic, strong) UIPanGestureRecognizer *panGestureRecognizer;
 
 - (void)setUp;
 - (void)layoutInScrollView;
@@ -85,7 +87,7 @@ static const CGFloat kTOScrollBarVerticalPadding = 20.0f;
     
     CGRect frame = CGRectZero;
     frame.size.width = kTOScrollBarWidth;
-    frame.size.height = MIN(height, kTOScrollBarMaxHeight);
+    frame.size.height = height;
     frame.origin.x = scrollViewFrame.size.width - kTOScrollBarWidth;
     
     frame.origin.y = (scrollViewFrame.size.height - frame.size.height) * 0.5f;
@@ -122,23 +124,29 @@ static const CGFloat kTOScrollBarVerticalPadding = 20.0f;
     
     [self.scrollView addSubview:self];
     
-    [self.scrollView.panGestureRecognizer requireGestureRecognizerToFail:self.panGestureRecognizer];
+    //[self.scrollView.panGestureRecognizer requireGestureRecognizerToFail:self.panGestureRecognizer];
     [self layoutInScrollView];
+}
+
+#pragma mark - Gesture Recognizer Delegate -
+- (BOOL)touchesShouldBegin:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event inContentView:(UIView *)view
+{
+    return NO;
 }
 
 #pragma mark - Image Generation -
 + (UIImage *)verticalCapsuleImageWithWidth:(CGFloat)width
 {
     UIImage *image = nil;
-    CGFloat radius = floor(width * 0.5f);
-    CGRect frame = (CGRect){0, 0, width, width+1};
+    CGFloat radius = width * 0.5f;
+    CGRect frame = (CGRect){0, 0, width+1, width+1};
     
     UIGraphicsBeginImageContextWithOptions(frame.size, NO, 0.0f);
     [[UIBezierPath bezierPathWithRoundedRect:frame cornerRadius:radius] fill];
     image = UIGraphicsGetImageFromCurrentImageContext();
     UIGraphicsEndImageContext();
     
-    image = [image resizableImageWithCapInsets:UIEdgeInsetsMake(radius, 0, radius, 0)];
+    image = [image resizableImageWithCapInsets:UIEdgeInsetsMake(radius, radius, radius, radius) resizingMode:UIImageResizingModeStretch];
     image = [image imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
     
     return image;

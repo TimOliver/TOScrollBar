@@ -22,7 +22,7 @@
 
 #import <UIKit/UIKit.h>
 
-@interface TOScrollBar : UIScrollView
+@interface TOScrollBar : UIView
 
 - (void)addToScrollView:(UIScrollView *)scrollView;
 
