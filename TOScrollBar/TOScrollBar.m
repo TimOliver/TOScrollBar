@@ -328,15 +328,38 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     // Get the point that moved
     CGPoint touchPoint = [touches.anyObject locationInView:self];
    
+    CGFloat delta = 0.0f;
+    
     // Apply the updated Y value plus the original offset
     CGRect handleFrame = self.handleView.frame;
+    delta = handleFrame.origin.y;
     handleFrame.origin.y = touchPoint.y - self.yOffset;
     handleFrame.origin.y = MAX(handleFrame.origin.y, 0.0f);
     handleFrame.origin.y = MIN(handleFrame.origin.y, self.trackView.frame.size.height - handleFrame.size.height);
     self.handleView.frame = handleFrame;
     
-    // Update the scroll view
-    [self setScrollYOffsetForHandleYOffset:handleFrame.origin.y];
+    delta -= handleFrame.origin.y;
+    delta = fabs(delta);
+    
+    // If the user is doing really granualar swipes, animate the scrolling
+    // so it's easier to track the scroll content
+    BOOL animate = (delta < 3.0f);
+    void (^offsetBlock)() = ^{ [self setScrollYOffsetForHandleYOffset:handleFrame.origin.y]; };
+    
+    // Update the scroll view without animation
+    if (!animate) {
+        offsetBlock();
+        return;
+    }
+    
+    // Animate
+    [UIView animateWithDuration:0.3f
+                          delay:0.0f
+         usingSpringWithDamping:1.0f
+          initialSpringVelocity:0.1f
+                        options:UIViewAnimationOptionBeginFromCurrentState
+                     animations:offsetBlock
+                     completion:nil];
 }
 
 - (void)touchesEnded:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event
