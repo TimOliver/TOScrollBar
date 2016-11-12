@@ -173,9 +173,9 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     CGSize contentSize        = self.scrollView.contentSize;
     CGRect scrollViewFrame    = self.scrollView.frame;
     
-    CGFloat contentHeight = contentSize.height + contentInset.top + contentInset.bottom;
-    CGFloat scrollProgress = (contentOffset.y + contentInset.top) / contentHeight;
-    frame.origin.y = (self.frame.size.height) * scrollProgress;
+    CGFloat scrollableHeight = (contentSize.height + contentInset.top + contentInset.bottom) - scrollViewFrame.size.height;
+    CGFloat scrollProgress = (contentOffset.y + contentInset.top) / scrollableHeight;
+    frame.origin.y = (self.frame.size.height - frame.size.height) * scrollProgress;
                        
     // If the scroll view expanded beyond its scrollable range, shrink the handle to match the rubber band effect
     if (contentOffset.y < -contentInset.top) { // The top
