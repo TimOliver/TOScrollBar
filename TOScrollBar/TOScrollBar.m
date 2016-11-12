@@ -53,10 +53,13 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
 @property (nonatomic, assign, readwrite) BOOL dragging;           // The user is presently dragging the handle
 @property (nonatomic, assign) CGFloat yOffset;         // The offset from the center of the thumb
 
+@property (nonatomic, assign) BOOL disabled;           // Disabled when there's no point in displaying
+
 - (void)setUp;
 - (void)configureScrollView:(UIScrollView *)scrollView;
 - (void)restoreScrollView:(UIScrollView *)scrollView;
 
+- (void)updateStateForScrollView;
 - (void)layoutInScrollView;
 - (CGFloat)heightOfHandleForContentSize;
 
@@ -127,6 +130,7 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object
                         change:(NSDictionary<NSKeyValueChangeKey,id> *)change context:(void *)context
 {
+    [self updateStateForScrollView];
     [self layoutInScrollView];
     [self setNeedsLayout];
 }
@@ -153,7 +157,7 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     self.trackView.frame = CGRectIntegral(frame);
     
     // Don't handle automatic layout when dragging; we'll do that manually elsewhere
-    if (self.dragging) {
+    if (self.dragging || self.disabled) {
         return;
     }
     
@@ -191,6 +195,22 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     frame.origin.y = MIN(frame.origin.y, (self.frame.size.height - frame.size.height));
     
     self.handleView.frame = frame;
+}
+
+- (void)updateStateForScrollView
+{
+    BOOL disable = NO;
+    
+    CGRect frame = self.scrollView.frame;
+    CGSize contentSize = self.scrollView.contentSize;
+    
+    if (contentSize.height < frame.size.height) {
+        disable = YES;
+    }
+    
+    self.disabled = disable;
+    
+    self.handleView.hidden = self.disabled;
 }
 
 - (void)layoutInScrollView
@@ -259,6 +279,10 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
 #pragma mark - User Interaction -
 - (void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event
 {
+    if (self.disabled) {
+        return;
+    }
+    
     self.scrollView.scrollEnabled = NO;
     self.dragging = YES;
     
@@ -297,6 +321,10 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
 
 - (void)touchesMoved:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event
 {
+    if (self.disabled) {
+        return;
+    }
+    
     // Get the point that moved
     CGPoint touchPoint = [touches.anyObject locationInView:self];
    
@@ -325,10 +353,16 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
 
 - (UIView*)hitTest:(CGPoint)point withEvent:(UIEvent *)event
 {
+    UIView *result = [super hitTest:point withEvent:event];
+    
+    if (self.disabled || self.dragging) {
+        return result;
+    }
+    
     // If the user comes in swiping, the scroll view will automatically
     // pick up that event unless we explicitly disable it
-    UIView *result = [super hitTest:point withEvent:event];
-    self.scrollView.scrollEnabled = (self.dragging == NO && result != self);
+    
+    self.scrollView.scrollEnabled = (result != self);
     return result;
 }
 
