@@ -43,4 +43,9 @@ static void * TOScrollBarPropertyKey = &TOScrollBarPropertyKey;
     [scrollBar addToScrollView:self];
 }
 
+- (void)to_removeScrollbar
+{
+    [self.to_scrollBar removeFromScrollView];
+}
+
 @end

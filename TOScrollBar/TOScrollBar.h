@@ -22,8 +22,47 @@
 
 #import <UIKit/UIKit.h>
 
+typedef NS_ENUM(NSInteger, TOScrollBarStyle) {
+    TOScrollBarStyleDefault,
+    TOScrollBarStyleDark
+};
+
 @interface TOScrollBar : UIView
 
+/** The inset, in points of the track from the edge of the scroll view */
+@property (nonatomic, assign) CGFloat edgeInset;
+
+/** The tint color of the track */
+@property (nonatomic, strong) UIColor *trackTintColor;
+
+/** The tint color of the handle (Defaults to the system tint color) */
+@property (nonatomic, strong) UIColor *handleTintColor;
+
+/** The user is currently dragging the handle */
+@property (nonatomic, assign, readonly) BOOL dragging;
+
+/** 
+ Creates a new instance of the scroll bar view 
+ 
+ @param style The initial style of the scroll bar upon creation
+ */
+- (instancetype)initWithStyle:(TOScrollBarStyle)style;
+
+/**
+ Adds the scroll bar to a scroll view
+ 
+ @param scrollView The scroll view that will receive this scroll bar
+ */
 - (void)addToScrollView:(UIScrollView *)scrollView;
+
+/**
+ Removes the scroll bar from the scroll view and resets the scroll view's state
+ */
+- (void)removeFromScrollView;
+
+/**
+ Shows or hides the scroll bar from the scroll view with an optional animation
+ */
+- (void)setHidden:(BOOL)hidden animated:(BOOL)animated;
 
 @end
