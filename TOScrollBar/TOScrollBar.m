@@ -271,19 +271,28 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
         touchPoint.y < handleFrame.origin.y + (handleFrame.size.height + 20))
     {
         self.yOffset = (touchPoint.y - handleFrame.origin.y);
+        return;
     }
-    else {
-        // User tapped somewhere else, animate the handle to that point
-        CGFloat halfHeight = (handleFrame.size.height * 0.5f);
-        
-        CGFloat destinationYOffset = touchPoint.y - halfHeight;
-        destinationYOffset = MAX(0.0f, destinationYOffset);
-        destinationYOffset = MIN(self.frame.size.height - halfHeight, destinationYOffset);
-        
-        self.yOffset = (touchPoint.y - handleFrame.origin.y);
-        
-        
-    }
+    
+    // User tapped somewhere else, animate the handle to that point
+    CGFloat halfHeight = (handleFrame.size.height * 0.5f);
+    
+    CGFloat destinationYOffset = touchPoint.y - halfHeight;
+    destinationYOffset = MAX(0.0f, destinationYOffset);
+    destinationYOffset = MIN(self.frame.size.height - halfHeight, destinationYOffset);
+    
+    self.yOffset = (touchPoint.y - destinationYOffset);
+    handleFrame.origin.y = destinationYOffset;
+    
+    [UIView animateWithDuration:0.2f
+                          delay:0.0f
+         usingSpringWithDamping:1.0f
+          initialSpringVelocity:0.1f options:UIViewAnimationOptionBeginFromCurrentState
+                     animations:^{
+                         self.handleView.frame = handleFrame;
+                     } completion:nil];
+    
+    [self setScrollYOffsetForHandleYOffset:destinationYOffset];
 }
 
 - (void)touchesMoved:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event
