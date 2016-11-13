@@ -35,7 +35,7 @@ static void * TOScrollBarPropertyKey = &TOScrollBarPropertyKey;
 
 - (void)setTo_scrollBar:(TOScrollBar *)scrollBar
 {
-    
+    objc_setAssociatedObject(self, TOScrollBarPropertyKey, scrollBar, OBJC_ASSOCIATION_RETAIN);
 }
 
 - (void)to_addScrollbar:(TOScrollBar *)scrollBar
