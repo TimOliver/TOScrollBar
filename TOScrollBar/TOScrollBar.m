@@ -21,14 +21,14 @@
 //  IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #import "TOScrollBar.h"
+#import "UIScrollView+TOScrollBar.h"
 
 /** Default values for the scroll bar */
-static const CGFloat kTOScrollBarTrackWidth     = 2.0f;     // The default width of the scrollable space indicator
-static const CGFloat kTOScrollBarHandleWidth    = 4.0f;     // The default width of the handle control
-static const CGFloat kTOScrollBarDefaultEdgeInset      = 8.0f;     // The distance from the edge of the view to the center of the track
-static const CGFloat kTOScrollBarHandleMinDefaultHeight = 64.0f;   // The minimum usable size to which the handle can shrink
-static const CGFloat kTOScrollBarHandleMinScrollHeight = 6.0f;     // The minimum size the handle may shrink when rubber banding
-static const CGFloat kTOScrollBarWidth          = 44.0f;    // The width of this control (44 is minimum recommended tapping space)
+static const CGFloat kTOScrollBarTrackWidth      = 2.0f;     // The default width of the scrollable space indicator
+static const CGFloat kTOScrollBarHandleWidth     = 4.0f;     // The default width of the handle control
+static const CGFloat kTOScrollBarEdgeInset       = 8.0f;     // The distance from the edge of the view to the center of the track
+static const CGFloat kTOScrollBarHandleMinHeight = 64.0f;   // The minimum usable size to which the handle can shrink
+static const CGFloat kTOScrollBarWidth           = 44.0f;    // The width of this control (44 is minimum recommended tapping space)
 static const CGFloat kTOScrollBarVerticalPadding = 20.0f;   // The default padding at the top and bottom of the view
 
 /************************************************************************/
@@ -40,22 +40,30 @@ struct TOScrollBarScrollViewState {
 typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
 
 /************************************************************************/
+// Private interface exposure for scroll view category
+
+@interface UIScrollView () //TOScrollBar
+- (void)setTo_scrollBar:(TOScrollBar *)scrollBar;
+@end
+
+/************************************************************************/
 
 @interface TOScrollBar () <UIGestureRecognizerDelegate> {
     TOScrollBarScrollViewState _scrollViewState;
 }
 
-@property (nonatomic, weak) UIScrollView *scrollView;
+@property (nonatomic, weak) UIScrollView *scrollView;   // The parent scroll view in which we belong
 
-@property (nonatomic, strong) UIImageView *trackView;  // The track indicating the scrollable distance
-@property (nonatomic, strong) UIImageView *handleView; // The handle that may be dragged in the scroll bar
+@property (nonatomic, strong) UIImageView *trackView;   // The track indicating the scrollable distance
+@property (nonatomic, strong) UIImageView *handleView;  // The handle that may be dragged in the scroll bar
 
-@property (nonatomic, assign, readwrite) BOOL dragging;           // The user is presently dragging the handle
-@property (nonatomic, assign) CGFloat yOffset;         // The offset from the center of the thumb
+@property (nonatomic, assign, readwrite) BOOL dragging; // The user is presently dragging the handle
+@property (nonatomic, assign) CGFloat yOffset;          // The offset from the center of the thumb
 
-@property (nonatomic, assign) BOOL disabled;           // Disabled when there's no point in displaying
+@property (nonatomic, assign) BOOL disabled;            // Disabled when there's no point in displaying
 
-- (void)setUp;
+- (void)setUpInitialProperties;
+- (void)setUpViews;
 - (void)configureScrollView:(UIScrollView *)scrollView;
 - (void)restoreScrollView:(UIScrollView *)scrollView;
 
@@ -73,7 +81,35 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
 
 @implementation TOScrollBar
 
-- (void)setUp
+#pragma mark - Set-up -
+
+- (instancetype)initWithFrame:(CGRect)frame
+{
+    if (self = [super initWithFrame:frame]) {
+        [self setUpInitialProperties];
+    }
+    
+    return self;
+}
+
+- (instancetype)initWithCoder:(NSCoder *)aDecoder
+{
+    if (self = [super initWithCoder:aDecoder]) {
+        [self setUpInitialProperties];
+    }
+    
+    return self;
+}
+
+- (void)setUpInitialProperties
+{
+    _trackWidth  = kTOScrollBarTrackWidth;
+    _handleWidth = kTOScrollBarHandleWidth;
+    _edgeInset   = kTOScrollBarEdgeInset;
+    _handleMinimiumHeight = kTOScrollBarHandleMinHeight;
+}
+
+- (void)setUpViews
 {
     if (!self.trackView) {
         self.trackView = [[UIImageView alloc] initWithImage:[TOScrollBar verticalCapsuleImageWithWidth:kTOScrollBarTrackWidth]];
@@ -124,7 +160,7 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
 - (void)willMoveToSuperview:(UIView *)newSuperview
 {
     [super willMoveToSuperview:newSuperview];
-    [self setUp];
+    [self setUpViews];
 }
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object
@@ -135,16 +171,18 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     [self setNeedsLayout];
 }
 
+#pragma mark - Content Layout -
+
 - (CGFloat)heightOfHandleForContentSize
 {
     if (self.scrollView == nil) {
-        return kTOScrollBarHandleMinDefaultHeight;
+        return _handleMinimiumHeight;
     }
 
     CGFloat heightRatio = self.scrollView.frame.size.height / self.scrollView.contentSize.height;
     CGFloat height = self.frame.size.height * heightRatio;
     
-    return MAX(floorf(height), kTOScrollBarHandleMinDefaultHeight);
+    return MAX(floorf(height), _handleMinimiumHeight);
 }
 
 - (void)layoutSubviews
@@ -180,13 +218,13 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     // If the scroll view expanded beyond its scrollable range, shrink the handle to match the rubber band effect
     if (contentOffset.y < -contentInset.top) { // The top
         frame.size.height -= (-contentOffset.y - contentInset.top);
-        frame.size.height = MAX(frame.size.height, kTOScrollBarHandleMinScrollHeight);
+        frame.size.height = MAX(frame.size.height, (_trackWidth * 2 + 2));
     }
     else if (contentOffset.y + scrollViewFrame.size.height > contentSize.height + contentInset.bottom) { // The bottom
         CGFloat adjustedContentOffset = contentOffset.y + scrollViewFrame.size.height;
         CGFloat delta = adjustedContentOffset - (contentSize.height + contentInset.bottom);
         frame.size.height -= delta;
-        frame.size.height = MAX(frame.size.height, kTOScrollBarHandleMinScrollHeight);
+        frame.size.height = MAX(frame.size.height, (_trackWidth * 2 + 2));
         frame.origin.y = self.frame.size.height - frame.size.height;
     }
     
@@ -264,13 +302,18 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     
     // Restore the previous scroll view
     [self restoreScrollView:self.scrollView];
+    
     // Assign the new scroll view
     self.scrollView = scrollView;
-    // Apply the observers/settings to the new scroll vie
+    
+    // Apply the observers/settings to the new scroll view
     [self configureScrollView:scrollView];
     
     // Add the scroll bar to the scroll view's content view
     [self.scrollView addSubview:self];
+    
+    // Add ourselves as a property of the scroll view
+    [scrollView setTo_scrollBar:self];
     
     // Begin layout
     [self layoutInScrollView];
@@ -316,7 +359,7 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
                          self.handleView.frame = handleFrame;
                      } completion:nil];
     
-    [self setScrollYOffsetForHandleYOffset:destinationYOffset];
+    [self setScrollYOffsetForHandleYOffset:floorf(destinationYOffset)];
 }
 
 - (void)touchesMoved:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event
@@ -327,7 +370,6 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     
     // Get the point that moved
     CGPoint touchPoint = [touches.anyObject locationInView:self];
-   
     CGFloat delta = 0.0f;
     
     // Apply the updated Y value plus the original offset
@@ -341,10 +383,10 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     delta -= handleFrame.origin.y;
     delta = fabs(delta);
     
-    // If the user is doing really granualar swipes, animate the scrolling
-    // so it's easier to track the scroll content
-    BOOL animate = (delta < 3.0f);
-    void (^offsetBlock)() = ^{ [self setScrollYOffsetForHandleYOffset:handleFrame.origin.y]; };
+    // If the user is doing really granualar swipes, add a subtle amount
+    // of vertical animation so the scroll view isn't jumping on each frame
+    BOOL animate = (delta < 0.5f);
+    void (^offsetBlock)() = ^{ [self setScrollYOffsetForHandleYOffset:floorf(handleFrame.origin.y)]; };
     
     // Update the scroll view without animation
     if (!animate) {
@@ -352,11 +394,11 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
         return;
     }
     
-    // Animate
-    [UIView animateWithDuration:0.3f
+    // Animate the scroll view offset
+    [UIView animateWithDuration:0.1f
                           delay:0.0f
-         usingSpringWithDamping:1.0f
-          initialSpringVelocity:0.1f
+//         usingSpringWithDamping:1.0f
+//          initialSpringVelocity:0.1f
                         options:UIViewAnimationOptionBeginFromCurrentState
                      animations:offsetBlock
                      completion:nil];
@@ -387,16 +429,6 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     
     self.scrollView.scrollEnabled = (result != self);
     return result;
-}
-
-#pragma mark - Accessors -
-- (CGFloat)edgeInset
-{
-    if (_edgeInset < FLT_EPSILON) {
-        _edgeInset = kTOScrollBarDefaultEdgeInset;
-    }
-    
-    return _edgeInset;
 }
 
 #pragma mark - Image Generation -
