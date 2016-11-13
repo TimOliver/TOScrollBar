@@ -29,17 +29,33 @@ typedef NS_ENUM(NSInteger, TOScrollBarStyle) {
 
 @interface TOScrollBar : UIView
 
-/** The inset, in points of the track from the edge of the scroll view */
+/** The inset, in points of the middle of track from the edge of the scroll view */
 @property (nonatomic, assign) CGFloat edgeInset;
 
 /** The tint color of the track */
 @property (nonatomic, strong) UIColor *trackTintColor;
 
+/** The width in points, of the track (Default value is 2.0) */
+@property (nonatomic, assign) CGFloat trackWidth;
+
 /** The tint color of the handle (Defaults to the system tint color) */
 @property (nonatomic, strong) UIColor *handleTintColor;
 
+/** The width in points, of the handle 
+    (Default value is 4.0) 
+ */
+@property (nonatomic, assign) CGFloat handleWidth;
+
+/** The minimum height in points the handle may be in relation to the content height. 
+    (Default value is 64.0)
+ */
+@property (nonatomic, assign) CGFloat handleMinimiumHeight;
+
 /** The user is currently dragging the handle */
 @property (nonatomic, assign, readonly) BOOL dragging;
+
+/** The minimum required scale of the scroll view's content height before the scroll bar is shown (Default is 5.0) */
+@property (nonatomic, assign) CGFloat minimumContentHeightScale;
 
 /** 
  Creates a new instance of the scroll bar view 
