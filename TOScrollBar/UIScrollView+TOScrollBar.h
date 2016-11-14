@@ -28,7 +28,7 @@
 
 @property (nonatomic, readonly) TOScrollBar *to_scrollBar;
 
-- (void)to_addScrollbar:(TOScrollBar *)scrollBar;
+- (void)to_addScrollBar:(TOScrollBar *)scrollBar;
 - (void)to_removeScrollbar;
 
 @end
