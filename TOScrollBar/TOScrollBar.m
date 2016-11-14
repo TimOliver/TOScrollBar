@@ -26,7 +26,7 @@
 /** Default values for the scroll bar */
 static const CGFloat kTOScrollBarTrackWidth      = 2.0f;     // The default width of the scrollable space indicator
 static const CGFloat kTOScrollBarHandleWidth     = 4.0f;     // The default width of the handle control
-static const CGFloat kTOScrollBarEdgeInset       = 10.0f;    // The distance from the edge of the view to the center of the track
+static const CGFloat kTOScrollBarEdgeInset       = 12.0f;     // The distance from the edge of the view to the center of the track
 static const CGFloat kTOScrollBarHandleMinHeight = 64.0f;    // The minimum usable size to which the handle can shrink
 static const CGFloat kTOScrollBarWidth           = 44.0f;    // The width of this control (44 is minimum recommended tapping space)
 static const CGFloat kTOScrollBarVerticalPadding = 20.0f;    // The default padding at the top and bottom of the view
@@ -267,7 +267,7 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     CGRect trackFrame = CGRectZero;
     trackFrame.size.width = _trackWidth;
     trackFrame.size.height = frame.size.height;
-    trackFrame.origin.x = floorf(((frame.size.width - _trackWidth) * 0.5f) + _horizontalOffset);
+    trackFrame.origin.x = ceilf(((frame.size.width - _trackWidth) * 0.5f) + _horizontalOffset);
     self.trackView.frame = CGRectIntegral(trackFrame);
     
     // Don't handle automatic layout when dragging; we'll do that manually elsewhere
@@ -279,7 +279,7 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     CGRect handleFrame = CGRectZero;
     handleFrame.size.width = _handleWidth;
     handleFrame.size.height = [self heightOfHandleForContentSize];
-    handleFrame.origin.x = floorf(((frame.size.width - _handleWidth) * 0.5f) + _horizontalOffset);
+    handleFrame.origin.x = ceilf(((frame.size.width - _handleWidth) * 0.5f) + _horizontalOffset);
     
     // Work out the y offset of the handle
     UIEdgeInsets contentInset = _scrollView.contentInset;
@@ -365,6 +365,19 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     [self restoreScrollView:self.scrollView];
     [self removeFromSuperview];
     [self.scrollView setTo_scrollBar:nil];
+}
+
+- (UIEdgeInsets)adjustedTableViewSeparatorInsetForInset:(UIEdgeInsets)inset
+{
+    inset.right = _edgeInset * 2.0f;
+    return inset;
+}
+
+- (UIEdgeInsets)adjustedTableViewCellLayoutMarginsForMargins:(UIEdgeInsets)layoutMargins manualOffset:(CGFloat)offset
+{
+    layoutMargins.right = (_edgeInset * 2.0f) + 15.0f; // Magic system number is 20, but we can't infer that from here on time
+    layoutMargins.right += offset;
+    return layoutMargins;
 }
 
 #pragma mark - User Interaction -

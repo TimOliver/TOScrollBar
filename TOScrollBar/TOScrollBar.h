@@ -28,6 +28,8 @@ typedef NS_ENUM(NSInteger, TOScrollBarStyle) {
     TOScrollBarStyleDark
 };
 
+NS_ASSUME_NONNULL_BEGIN
+
 @interface TOScrollBar : UIView
 
 /* The visual style of the scroll bar, either light or dark */
@@ -46,7 +48,7 @@ typedef NS_ENUM(NSInteger, TOScrollBarStyle) {
 @property (nonatomic, assign) CGFloat trackWidth;
 
 /** The tint color of the handle (Defaults to the system tint color) */
-@property (nonatomic, strong) UIColor *handleTintColor;
+@property (nonatomic, strong, nullable) UIColor *handleTintColor;
 
 /** The width in points, of the handle. (Default value is 4.0) */
 @property (nonatomic, assign) CGFloat handleWidth;
@@ -80,8 +82,30 @@ typedef NS_ENUM(NSInteger, TOScrollBarStyle) {
 - (void)removeFromScrollView;
 
 /**
+ If added to a table view, this convienience method will compute the appropriate
+ inset values for the table separator so they don't underlap the scroll bar
+ 
+ @param inset The original separator inset value of the table view
+ */
+- (UIEdgeInsets)adjustedTableViewSeparatorInsetForInset:(UIEdgeInsets)inset;
+
+/**
+ If added to a table view, this convienience method will compute the appropriate
+ insets values for each cell's layout margins in order to appropriately push the cell's
+ content inwards
+ 
+ @param layoutMargins The current `layoutMargins` value of the `UITableViewCell` instance.
+ @param offset If desired, any additional horizontal offset for this specific use case
+ 
+ */
+- (UIEdgeInsets)adjustedTableViewCellLayoutMarginsForMargins:(UIEdgeInsets)layoutMargins manualOffset:(CGFloat)offset;
+
+/**
  Shows or hides the scroll bar from the scroll view with an optional animation
  */
 - (void)setHidden:(BOOL)hidden animated:(BOOL)animated;
 
 @end
+
+NS_ASSUME_NONNULL_END
+
