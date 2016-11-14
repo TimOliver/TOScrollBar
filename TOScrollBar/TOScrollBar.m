@@ -26,10 +26,11 @@
 /** Default values for the scroll bar */
 static const CGFloat kTOScrollBarTrackWidth      = 2.0f;     // The default width of the scrollable space indicator
 static const CGFloat kTOScrollBarHandleWidth     = 4.0f;     // The default width of the handle control
-static const CGFloat kTOScrollBarEdgeInset       = 8.0f;     // The distance from the edge of the view to the center of the track
-static const CGFloat kTOScrollBarHandleMinHeight = 64.0f;   // The minimum usable size to which the handle can shrink
+static const CGFloat kTOScrollBarEdgeInset       = 10.0f;    // The distance from the edge of the view to the center of the track
+static const CGFloat kTOScrollBarHandleMinHeight = 64.0f;    // The minimum usable size to which the handle can shrink
 static const CGFloat kTOScrollBarWidth           = 44.0f;    // The width of this control (44 is minimum recommended tapping space)
-static const CGFloat kTOScrollBarVerticalPadding = 20.0f;   // The default padding at the top and bottom of the view
+static const CGFloat kTOScrollBarVerticalPadding = 20.0f;    // The default padding at the top and bottom of the view
+static const CGFloat kTOScrollBarMinimumContentScale = 5.0f; // The minimum scale of the content view before showing the scroll view is necessary
 
 /************************************************************************/
 
@@ -60,10 +61,13 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
 @property (nonatomic, assign, readwrite) BOOL dragging; // The user is presently dragging the handle
 @property (nonatomic, assign) CGFloat yOffset;          // The offset from the center of the thumb
 
-@property (nonatomic, assign) BOOL disabled;            // Disabled when there's no point in displaying
+@property (nonatomic, assign) CGFloat horizontalOffset; // The horizontal offset when the edge inset is too small for the touch region
+
+@property (nonatomic, assign) BOOL disabled;            // Disabled when there's not enough scroll content to merit showing this
 
 - (void)setUpInitialProperties;
 - (void)setUpViews;
+- (void)configureViewsForStyle:(TOScrollBarStyle)style;
 - (void)configureScrollView:(UIScrollView *)scrollView;
 - (void)restoreScrollView:(UIScrollView *)scrollView;
 
@@ -81,7 +85,16 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
 
 @implementation TOScrollBar
 
-#pragma mark - Set-up -
+#pragma mark - Class Creation -
+
+- (instancetype)initWithStyle:(TOScrollBarStyle)style
+{
+    if (self = [super initWithFrame:CGRectZero]) {
+        _style = style;
+    }
+    
+    return self;
+}
 
 - (instancetype)initWithFrame:(CGRect)frame
 {
@@ -101,26 +114,47 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     return self;
 }
 
+#pragma mark - Set-up -
+
 - (void)setUpInitialProperties
 {
     _trackWidth  = kTOScrollBarTrackWidth;
     _handleWidth = kTOScrollBarHandleWidth;
     _edgeInset   = kTOScrollBarEdgeInset;
     _handleMinimiumHeight = kTOScrollBarHandleMinHeight;
+    _minimumContentHeightScale = kTOScrollBarMinimumContentScale;
+    _verticalInset = UIEdgeInsetsMake(kTOScrollBarVerticalPadding, 0.0f, kTOScrollBarVerticalPadding, 0.0f);
 }
 
 - (void)setUpViews
 {
-    if (!self.trackView) {
-        self.trackView = [[UIImageView alloc] initWithImage:[TOScrollBar verticalCapsuleImageWithWidth:kTOScrollBarTrackWidth]];
-        self.trackView.tintColor = [UIColor colorWithWhite:0.0f alpha:0.1f];
-        [self addSubview:self.trackView];
+    if (self.trackView || self.handleView) {
+        return;
     }
     
-    if (!self.handleView) {
-        self.handleView = [[UIImageView alloc] initWithImage:[TOScrollBar verticalCapsuleImageWithWidth:kTOScrollBarHandleWidth]];
-        [self addSubview:self.handleView];
+    self.backgroundColor = [UIColor clearColor];
+    
+    // Create and add the track view
+    self.trackView = [[UIImageView alloc] initWithImage:[TOScrollBar verticalCapsuleImageWithWidth:self.trackWidth]];
+    [self addSubview:self.trackView];
+    
+    // Add the handle view
+    self.handleView = [[UIImageView alloc] initWithImage:[TOScrollBar verticalCapsuleImageWithWidth:self.handleWidth]];
+    [self addSubview:self.handleView];
+    
+    // Add the initial styling
+    [self configureViewsForStyle:self.style];
+}
+
+- (void)configureViewsForStyle:(TOScrollBarStyle)style
+{
+    BOOL dark = (style == TOScrollBarStyleDark);
+    
+    CGFloat whiteColor = 0.0f;
+    if (dark) {
+        whiteColor = 1.0f;
     }
+    self.trackView.tintColor = [UIColor colorWithWhite:whiteColor alpha:0.1f];
 }
 
 - (void)dealloc
@@ -163,19 +197,20 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     [self setUpViews];
 }
 
+#pragma mark - Content Layout -
+
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object
                         change:(NSDictionary<NSKeyValueChangeKey,id> *)change context:(void *)context
 {
     [self updateStateForScrollView];
+    if (self.hidden) { return; }
     [self layoutInScrollView];
     [self setNeedsLayout];
 }
 
-#pragma mark - Content Layout -
-
 - (CGFloat)heightOfHandleForContentSize
 {
-    if (self.scrollView == nil) {
+    if (_scrollView == nil) {
         return _handleMinimiumHeight;
     }
 
@@ -185,14 +220,55 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     return MAX(floorf(height), _handleMinimiumHeight);
 }
 
+- (void)updateStateForScrollView
+{
+    CGRect frame = _scrollView.frame;
+    CGSize contentSize = _scrollView.contentSize;
+    self.disabled = (contentSize.height / frame.size.height) < _minimumContentHeightScale;
+    self.hidden = (self.disabled || self.hidden);
+}
+
+- (void)layoutInScrollView
+{
+    CGRect scrollViewFrame = _scrollView.frame;
+    UIEdgeInsets insets    = _scrollView.contentInset;
+    CGPoint contentOffset  = _scrollView.contentOffset;
+    CGFloat halfWidth      = (kTOScrollBarWidth * 0.5f);
+    
+    // Contract the usable space by the scroll view's content inset (eg navigation/tool bars)
+    scrollViewFrame.size.height -= (insets.top + insets.bottom);
+    
+    // Work out the final height be further contracting by the padding
+    CGFloat height = scrollViewFrame.size.height - (_verticalInset.top + _verticalInset.bottom);
+    
+    // Work out how much we have to offset the track by to make sure all of the parent view
+    // is visible at the edge of the screen (Or else we'll be unable to tap properly)
+    CGFloat horizontalOffset = halfWidth - _edgeInset;
+    self.horizontalOffset = (horizontalOffset > 0.0f) ? horizontalOffset : 0.0f;
+    
+    CGRect frame = CGRectZero;
+    frame.size.width = kTOScrollBarWidth;
+    frame.size.height = height;
+    frame.origin.x = scrollViewFrame.size.width - (_edgeInset + halfWidth);
+    frame.origin.x = MIN(frame.origin.x, scrollViewFrame.size.width - kTOScrollBarWidth);
+    
+    frame.origin.y = _verticalInset.top;
+    frame.origin.y += contentOffset.y;
+    frame.origin.y += insets.top;
+    
+    self.frame = frame;
+}
+
 - (void)layoutSubviews
 {
+    CGRect frame = self.frame;
+    
     // The frame of the track
-    CGRect frame = CGRectZero;
-    frame.size.width = kTOScrollBarTrackWidth;
-    frame.size.height = self.frame.size.height;
-    frame.origin.x = floorf((self.frame.size.width - kTOScrollBarTrackWidth) * 0.5f);
-    self.trackView.frame = CGRectIntegral(frame);
+    CGRect trackFrame = CGRectZero;
+    trackFrame.size.width = _trackWidth;
+    trackFrame.size.height = frame.size.height;
+    trackFrame.origin.x = floorf(((frame.size.width - _trackWidth) * 0.5f) + _horizontalOffset);
+    self.trackView.frame = CGRectIntegral(trackFrame);
     
     // Don't handle automatic layout when dragging; we'll do that manually elsewhere
     if (self.dragging || self.disabled) {
@@ -200,99 +276,64 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     }
     
     // The frame of the handle
-    frame = CGRectZero;
-    frame.size.width = kTOScrollBarHandleWidth;
-    frame.size.height = [self heightOfHandleForContentSize];
-    frame.origin.x = ceilf((self.frame.size.width - kTOScrollBarHandleWidth) * 0.5f);
+    CGRect handleFrame = CGRectZero;
+    handleFrame.size.width = _handleWidth;
+    handleFrame.size.height = [self heightOfHandleForContentSize];
+    handleFrame.origin.x = floorf(((frame.size.width - _handleWidth) * 0.5f) + _horizontalOffset);
     
     // Work out the y offset of the handle
-    UIEdgeInsets contentInset = self.scrollView.contentInset;
-    CGPoint contentOffset     = self.scrollView.contentOffset;
-    CGSize contentSize        = self.scrollView.contentSize;
-    CGRect scrollViewFrame    = self.scrollView.frame;
+    UIEdgeInsets contentInset = _scrollView.contentInset;
+    CGPoint contentOffset     = _scrollView.contentOffset;
+    CGSize contentSize        = _scrollView.contentSize;
+    CGRect scrollViewFrame    = _scrollView.frame;
     
     CGFloat scrollableHeight = (contentSize.height + contentInset.top + contentInset.bottom) - scrollViewFrame.size.height;
     CGFloat scrollProgress = (contentOffset.y + contentInset.top) / scrollableHeight;
-    frame.origin.y = (self.frame.size.height - frame.size.height) * scrollProgress;
-                       
+    handleFrame.origin.y = (frame.size.height - handleFrame.size.height) * scrollProgress;
+    
     // If the scroll view expanded beyond its scrollable range, shrink the handle to match the rubber band effect
     if (contentOffset.y < -contentInset.top) { // The top
-        frame.size.height -= (-contentOffset.y - contentInset.top);
-        frame.size.height = MAX(frame.size.height, (_trackWidth * 2 + 2));
+        handleFrame.size.height -= (-contentOffset.y - contentInset.top);
+        handleFrame.size.height = MAX(handleFrame.size.height, (_trackWidth * 2 + 2));
     }
     else if (contentOffset.y + scrollViewFrame.size.height > contentSize.height + contentInset.bottom) { // The bottom
         CGFloat adjustedContentOffset = contentOffset.y + scrollViewFrame.size.height;
         CGFloat delta = adjustedContentOffset - (contentSize.height + contentInset.bottom);
-        frame.size.height -= delta;
-        frame.size.height = MAX(frame.size.height, (_trackWidth * 2 + 2));
-        frame.origin.y = self.frame.size.height - frame.size.height;
+        handleFrame.size.height -= delta;
+        handleFrame.size.height = MAX(handleFrame.size.height, (_trackWidth * 2 + 2));
+        handleFrame.origin.y = frame.size.height - handleFrame.size.height;
     }
     
     // Clamp to the bounds of the frame
-    frame.origin.y = MAX(frame.origin.y, 0.0f);
-    frame.origin.y = MIN(frame.origin.y, (self.frame.size.height - frame.size.height));
+    handleFrame.origin.y = MAX(handleFrame.origin.y, 0.0f);
+    handleFrame.origin.y = MIN(handleFrame.origin.y, (frame.size.height - handleFrame.size.height));
     
-    self.handleView.frame = frame;
-}
-
-- (void)updateStateForScrollView
-{
-    BOOL disable = NO;
-    
-    CGRect frame = self.scrollView.frame;
-    CGSize contentSize = self.scrollView.contentSize;
-    
-    if (contentSize.height < frame.size.height) {
-        disable = YES;
-    }
-    
-    self.disabled = disable;
-    
-    self.handleView.hidden = self.disabled;
-}
-
-- (void)layoutInScrollView
-{
-    CGRect scrollViewFrame = self.scrollView.frame;
-    UIEdgeInsets insets = self.scrollView.contentInset;
-    CGPoint contentOffset = self.scrollView.contentOffset;
-    
-    scrollViewFrame.size.height -= (insets.top + insets.bottom);
-    CGFloat height = scrollViewFrame.size.height - (kTOScrollBarVerticalPadding * 2);
-    
-    CGRect frame = CGRectZero;
-    frame.size.width = kTOScrollBarWidth;
-    frame.size.height = height;
-    frame.origin.x = scrollViewFrame.size.width - kTOScrollBarWidth;
-    
-    frame.origin.y = (scrollViewFrame.size.height - frame.size.height) * 0.5f;
-    frame.origin.y += contentOffset.y;
-    frame.origin.y += self.scrollView.contentInset.top;
-    
-    self.frame = frame;
+    self.handleView.frame = handleFrame;
 }
 
 - (void)setScrollYOffsetForHandleYOffset:(CGFloat)yOffset
 {
-    CGFloat heightRange = self.trackView.frame.size.height - self.handleView.frame.size.height;
+    CGFloat heightRange = _trackView.frame.size.height - _handleView.frame.size.height;
     yOffset = MAX(0.0f, yOffset);
     yOffset = MIN(heightRange, yOffset);
     
     CGFloat positionRatio = yOffset / heightRange;
     
-    CGRect frame = self.scrollView.frame;
-    UIEdgeInsets inset = self.scrollView.contentInset;
-    CGSize contentSize = self.scrollView.contentSize;
+    CGRect frame       = _scrollView.frame;
+    UIEdgeInsets inset = _scrollView.contentInset;
+    CGSize contentSize = _scrollView.contentSize;
     
     CGFloat totalScrollSize = (contentSize.height + inset.top + inset.bottom) - frame.size.height;
     CGFloat scrollOffset = totalScrollSize * positionRatio;
     scrollOffset -= inset.top;
     
-    CGPoint contentOffset = self.scrollView.contentOffset;
+    CGPoint contentOffset = _scrollView.contentOffset;
     contentOffset.y = scrollOffset;
     
     [self.scrollView setContentOffset:contentOffset animated:NO];
 }
+
+#pragma mark - Scroll View Integration -
 
 - (void)addToScrollView:(UIScrollView *)scrollView
 {
@@ -313,10 +354,17 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     [self.scrollView addSubview:self];
     
     // Add ourselves as a property of the scroll view
-    [scrollView setTo_scrollBar:self];
+    [self.scrollView setTo_scrollBar:self];
     
     // Begin layout
     [self layoutInScrollView];
+}
+
+- (void)removeFromScrollView
+{
+    [self restoreScrollView:self.scrollView];
+    [self removeFromSuperview];
+    [self.scrollView setTo_scrollBar:nil];
 }
 
 #pragma mark - User Interaction -
@@ -424,11 +472,90 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
         return result;
     }
     
-    // If the user comes in swiping, the scroll view will automatically
-    // pick up that event unless we explicitly disable it
+    // If the user contacts the screen in a swiping motion,
+    // the scroll view will automatically highjack the touch
+    // event unless we explicitly override it here.
     
     self.scrollView.scrollEnabled = (result != self);
     return result;
+}
+
+#pragma mark - Accessors -
+- (void)setStyle:(TOScrollBarStyle)style
+{
+    _style = style;
+    [self configureViewsForStyle:style];
+}
+
+- (UIColor *)trackTintColor { return self.trackView.tintColor; }
+
+- (void)setTrackTintColor:(UIColor *)trackTintColor
+{
+    self.trackView.tintColor = trackTintColor;
+}
+
+- (UIColor *)handleTintColor { return self.handleView.tintColor; }
+
+- (void)setHandleTintColor:(UIColor *)handleTintColor
+{
+    self.handleView.tintColor = handleTintColor;
+}
+
+- (BOOL)hidden
+{
+    return super.hidden;
+}
+
+- (void)setHidden:(BOOL)hidden
+{
+    [self setHidden:hidden animated:NO];
+}
+
+- (void)setHidden:(BOOL)hidden animated:(BOOL)animated
+{
+    // Override. It cannot be shown if it's disabled
+    if (_disabled) {
+        super.hidden = YES;
+        return;
+    }
+    
+    // Simply show or hide it if we're not animating
+    if (animated == NO) {
+        super.hidden = hidden;
+        return;
+    }
+    
+    // Show it if we're going to animate it
+    if (self.hidden && hidden == NO) {
+        super.hidden = NO;
+        [self layoutInScrollView];
+        [self setNeedsLayout];
+    }
+    
+    CGRect fromFrame = self.frame;
+    CGRect toFrame = self.frame;
+    
+    CGFloat widestElement = MAX(_trackWidth, _handleWidth);
+    CGFloat hiddenOffset = fromFrame.origin.x + _edgeInset + (widestElement * 2.0f);
+    if (hidden == NO) {
+        fromFrame.origin.x = hiddenOffset;
+    }
+    else {
+        toFrame.origin.x = hiddenOffset;
+    }
+    
+    self.frame = fromFrame;
+    [UIView animateWithDuration:0.3f
+                          delay:0.0f
+         usingSpringWithDamping:1.0f
+          initialSpringVelocity:0.1f
+                        options:UIViewAnimationOptionBeginFromCurrentState
+                     animations:^{
+                         self.frame = toFrame;
+                     } completion:^(BOOL finished) {
+                         super.hidden = hidden;
+                     }];
+    
 }
 
 #pragma mark - Image Generation -

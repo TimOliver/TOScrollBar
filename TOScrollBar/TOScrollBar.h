@@ -21,6 +21,7 @@
 //  IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #import <UIKit/UIKit.h>
+#import "UIScrollView+TOScrollBar.h"
 
 typedef NS_ENUM(NSInteger, TOScrollBarStyle) {
     TOScrollBarStyleDefault,
@@ -28,6 +29,12 @@ typedef NS_ENUM(NSInteger, TOScrollBarStyle) {
 };
 
 @interface TOScrollBar : UIView
+
+/* The visual style of the scroll bar, either light or dark */
+@property (nonatomic, assign) TOScrollBarStyle style;
+
+/** The amount of padding above and below the scroll bar (Only top and bottom values are counted. Default is {20,20} ) */
+@property (nonatomic, assign) UIEdgeInsets verticalInset;
 
 /** The inset, in points of the middle of track from the edge of the scroll view */
 @property (nonatomic, assign) CGFloat edgeInset;
@@ -41,14 +48,10 @@ typedef NS_ENUM(NSInteger, TOScrollBarStyle) {
 /** The tint color of the handle (Defaults to the system tint color) */
 @property (nonatomic, strong) UIColor *handleTintColor;
 
-/** The width in points, of the handle 
-    (Default value is 4.0) 
- */
+/** The width in points, of the handle. (Default value is 4.0) */
 @property (nonatomic, assign) CGFloat handleWidth;
 
-/** The minimum height in points the handle may be in relation to the content height. 
-    (Default value is 64.0)
- */
+/** The minimum height in points the handle may be in relation to the content height. (Default value is 64.0) */
 @property (nonatomic, assign) CGFloat handleMinimiumHeight;
 
 /** The user is currently dragging the handle */
