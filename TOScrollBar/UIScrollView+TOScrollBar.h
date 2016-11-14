@@ -26,9 +26,18 @@
 
 @interface UIScrollView (TOScrollBar)
 
-@property (nonatomic, readonly) TOScrollBar *to_scrollBar;
+/** The scroll bar view currently added to this scroll view */
+@property (nullable, nonatomic, readonly) TOScrollBar *to_scrollBar;
 
-- (void)to_addScrollBar:(TOScrollBar *)scrollBar;
+/**
+ Adds a new scroll bar instance to this scroll bar
+ @param scrollBar The scroll bar in which to add
+ */
+- (void)to_addScrollBar:(nullable TOScrollBar *)scrollBar;
+
+/**
+ Removes the current scroll bar (if any) from the scroll bar
+ */
 - (void)to_removeScrollbar;
 
 @end
