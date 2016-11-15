@@ -65,6 +65,8 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
 
 @property (nonatomic, assign) BOOL disabled;            // Disabled when there's not enough scroll content to merit showing this
 
+@property (nonatomic, strong) UIImpactFeedbackGenerator *feedbackGenerator; // Taptic feedback for iPhone 7 and above
+
 - (void)setUpInitialProperties;
 - (void)setUpViews;
 - (void)configureViewsForStyle:(TOScrollBarStyle)style;
@@ -124,6 +126,7 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     _handleMinimiumHeight = kTOScrollBarHandleMinHeight;
     _minimumContentHeightScale = kTOScrollBarMinimumContentScale;
     _verticalInset = UIEdgeInsetsMake(kTOScrollBarVerticalPadding, 0.0f, kTOScrollBarVerticalPadding, 0.0f);
+    _feedbackGenerator = [[UIImpactFeedbackGenerator alloc] initWithStyle:UIImpactFeedbackStyleLight];
 }
 
 - (void)setUpViews
@@ -387,6 +390,9 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
         return;
     }
     
+    // Warm-up the feedback generator
+    [_feedbackGenerator prepare];
+    
     self.scrollView.scrollEnabled = NO;
     self.dragging = YES;
     
@@ -432,17 +438,39 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     // Get the point that moved
     CGPoint touchPoint = [touches.anyObject locationInView:self];
     CGFloat delta = 0.0f;
+    CGRect handleFrame = _handleView.frame;
+    CGRect trackFrame = _trackView.frame;
+    CGFloat minimumY = 0.0f;
+    CGFloat maximumY = trackFrame.size.height - handleFrame.size.height;
     
-    // Apply the updated Y value plus the original offset
-    CGRect handleFrame = self.handleView.frame;
+    // Apply the updated Y value plus the previous offset
     delta = handleFrame.origin.y;
-    handleFrame.origin.y = touchPoint.y - self.yOffset;
-    handleFrame.origin.y = MAX(handleFrame.origin.y, 0.0f);
-    handleFrame.origin.y = MIN(handleFrame.origin.y, self.trackView.frame.size.height - handleFrame.size.height);
-    self.handleView.frame = handleFrame;
+    handleFrame.origin.y = touchPoint.y - _yOffset;
+    
+    //Clamp the handle, and adjust the y offset to counter going outside the bounds
+    if (handleFrame.origin.y < minimumY) {
+        _yOffset += handleFrame.origin.y;
+        _yOffset = MAX(minimumY, _yOffset);
+        handleFrame.origin.y = minimumY;
+    }
+    else if (handleFrame.origin.y > maximumY) {
+        CGFloat handleOverflow = CGRectGetMaxY(handleFrame) - trackFrame.size.height;
+        _yOffset += handleOverflow;
+        _yOffset = MIN(self.yOffset, handleFrame.size.height);
+        handleFrame.origin.y = MIN(handleFrame.origin.y, maximumY);
+    }
+
+    _handleView.frame = handleFrame;
     
     delta -= handleFrame.origin.y;
     delta = fabs(delta);
+    
+    // If the delta is not 0.0, but we're at either extreme,
+    // this is first frame we've since reaching that point.
+    // Play a taptic feedback impact
+    if (delta > FLT_EPSILON && (CGRectGetMinY(handleFrame) < FLT_EPSILON || CGRectGetMinY(handleFrame) >= maximumY - FLT_EPSILON)) {
+        [_feedbackGenerator impactOccurred];
+    }
     
     // If the user is doing really granualar swipes, add a subtle amount
     // of vertical animation so the scroll view isn't jumping on each frame
@@ -456,10 +484,10 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     }
     
     // Animate the scroll view offset
-    [UIView animateWithDuration:0.1f
+    [UIView animateWithDuration:0.25f
                           delay:0.0f
-//         usingSpringWithDamping:1.0f
-//          initialSpringVelocity:0.1f
+         usingSpringWithDamping:1.0f
+          initialSpringVelocity:0.1f
                         options:UIViewAnimationOptionBeginFromCurrentState
                      animations:offsetBlock
                      completion:nil];
