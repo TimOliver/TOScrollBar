@@ -1,3 +1,5 @@
+# TOScrollBar
+
 ![TOScrollBar](TOScrollBar.jpg)
 
 [![CI Status](http://img.shields.io/travis/TimOliver/TOScrollBar.svg?style=flat)](http://api.travis-ci.org/TimOliver/TOScrollBar.svg)
@@ -5,8 +7,6 @@
 [![Version](https://img.shields.io/cocoapods/v/TOScrollBar.svg?style=flat)](http://cocoadocs.org/docsets/TOScrollBar)
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/TimOliver/TOScrollBar/master/LICENSE)
 [![Platform](https://img.shields.io/cocoapods/p/TOScrollBar.svg?style=flat)](http://cocoadocs.org/docsets/TOScrollBar)
-
-# TOScrollBar
 
 `TOScrollBar` is a UI component that can be inserted into `UIScrollView` instances, allowing the user to traverse the entire scroll view in one swiping gesture.
 
