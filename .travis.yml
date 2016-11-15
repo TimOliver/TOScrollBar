@@ -2,4 +2,4 @@ language: objective-c
 osx_image: xcode8
 xcode_project: TOScrollBarExample.xcodeproj
 xcode_scheme: TOScrollBarExample
-script: set -o pipefail && xcodebuild -project "TOScrollBarExample.xcodeproj" -scheme "TOScrollBarExample" -sdk iphonesimulator ONLY_ACTIVE_ARCH=NO -destination "platform=iOS Simulator,name=iPhone 7,OS=10.0" clean test | xcpretty
+script: set -o pipefail && xcodebuild -project "TOScrollBarExample.xcodeproj" -scheme "TOScrollBarExample" -sdk iphonesimulator ONLY_ACTIVE_ARCH=NO -destination "platform=iOS Simulator,name=iPhone 7" clean test | xcpretty
