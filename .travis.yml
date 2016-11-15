@@ -1,0 +1,5 @@
+language: objective-c
+osx_image: xcode8
+xcode_project: TOScrollBarExample.xcodeproj
+xcode_scheme: TOScrollBarExample
+script: xcodebuild -verbose -scheme TOScrollBarExampleTests -sdk iphonesimulator -destination "name=iPhone SE" test
