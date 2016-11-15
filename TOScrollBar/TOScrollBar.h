@@ -62,6 +62,9 @@ NS_ASSUME_NONNULL_BEGIN
 /** The minimum required scale of the scroll view's content height before the scroll bar is shown (Default is 5.0) */
 @property (nonatomic, assign) CGFloat minimumContentHeightScale;
 
+/** The scroll view in which this scroll bar has been added. */
+@property (nonatomic, weak, readonly) UIScrollView *scrollView;
+
 /** 
  Creates a new instance of the scroll bar view 
  

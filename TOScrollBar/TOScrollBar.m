@@ -53,7 +53,7 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     TOScrollBarScrollViewState _scrollViewState;
 }
 
-@property (nonatomic, weak) UIScrollView *scrollView;   // The parent scroll view in which we belong
+@property (nonatomic, weak, readwrite) UIScrollView *scrollView;   // The parent scroll view in which we belong
 
 @property (nonatomic, strong) UIImageView *trackView;   // The track indicating the scrollable distance
 @property (nonatomic, strong) UIImageView *handleView;  // The handle that may be dragged in the scroll bar
@@ -368,6 +368,7 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     [self restoreScrollView:self.scrollView];
     [self removeFromSuperview];
     [self.scrollView setTo_scrollBar:nil];
+    self.scrollView = nil;
 }
 
 - (UIEdgeInsets)adjustedTableViewSeparatorInsetForInset:(UIEdgeInsets)inset

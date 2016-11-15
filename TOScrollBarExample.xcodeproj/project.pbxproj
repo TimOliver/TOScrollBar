@@ -14,8 +14,19 @@
 		222F87C71DCE453B0068DE2F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 222F87C61DCE453B0068DE2F /* Assets.xcassets */; };
 		222F87CA1DCE453B0068DE2F /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 222F87C81DCE453B0068DE2F /* LaunchScreen.storyboard */; };
 		223B9BF71DCE496F008601D2 /* TOScrollBar.m in Sources */ = {isa = PBXBuildFile; fileRef = 223B9BF61DCE496F008601D2 /* TOScrollBar.m */; };
+		225FD7941DDAF85C008CF7E4 /* TOScrollBarExampleTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 225FD7931DDAF85C008CF7E4 /* TOScrollBarExampleTests.m */; };
 		22CCCCD11DD064B90092A89D /* UIScrollView+TOScrollBar.m in Sources */ = {isa = PBXBuildFile; fileRef = 22CCCCD01DD064B90092A89D /* UIScrollView+TOScrollBar.m */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		225FD7961DDAF85C008CF7E4 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 222F87AF1DCE453B0068DE2F /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 222F87B61DCE453B0068DE2F;
+			remoteInfo = TOScrollBarExample;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		222F87B71DCE453B0068DE2F /* TOScrollBarExample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TOScrollBarExample.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -30,12 +41,22 @@
 		222F87CB1DCE453B0068DE2F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		223B9BF51DCE496F008601D2 /* TOScrollBar.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TOScrollBar.h; sourceTree = "<group>"; };
 		223B9BF61DCE496F008601D2 /* TOScrollBar.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TOScrollBar.m; sourceTree = "<group>"; };
+		225FD7911DDAF85C008CF7E4 /* TOScrollBarExampleTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TOScrollBarExampleTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		225FD7931DDAF85C008CF7E4 /* TOScrollBarExampleTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TOScrollBarExampleTests.m; sourceTree = "<group>"; };
+		225FD7951DDAF85C008CF7E4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		22CCCCCF1DD064B90092A89D /* UIScrollView+TOScrollBar.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIScrollView+TOScrollBar.h"; sourceTree = "<group>"; };
 		22CCCCD01DD064B90092A89D /* UIScrollView+TOScrollBar.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIScrollView+TOScrollBar.m"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		222F87B41DCE453B0068DE2F /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		225FD78E1DDAF85C008CF7E4 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -50,6 +71,7 @@
 			children = (
 				223B9BF41DCE487A008601D2 /* TOScrollBar */,
 				222F87B91DCE453B0068DE2F /* TOScrollBarExample */,
+				225FD7921DDAF85C008CF7E4 /* TOScrollBarExampleTests */,
 				222F87B81DCE453B0068DE2F /* Products */,
 			);
 			sourceTree = "<group>";
@@ -58,6 +80,7 @@
 			isa = PBXGroup;
 			children = (
 				222F87B71DCE453B0068DE2F /* TOScrollBarExample.app */,
+				225FD7911DDAF85C008CF7E4 /* TOScrollBarExampleTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -97,6 +120,15 @@
 			path = TOScrollBar;
 			sourceTree = "<group>";
 		};
+		225FD7921DDAF85C008CF7E4 /* TOScrollBarExampleTests */ = {
+			isa = PBXGroup;
+			children = (
+				225FD7931DDAF85C008CF7E4 /* TOScrollBarExampleTests.m */,
+				225FD7951DDAF85C008CF7E4 /* Info.plist */,
+			);
+			path = TOScrollBarExampleTests;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -117,6 +149,24 @@
 			productReference = 222F87B71DCE453B0068DE2F /* TOScrollBarExample.app */;
 			productType = "com.apple.product-type.application";
 		};
+		225FD7901DDAF85C008CF7E4 /* TOScrollBarExampleTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 225FD79A1DDAF85C008CF7E4 /* Build configuration list for PBXNativeTarget "TOScrollBarExampleTests" */;
+			buildPhases = (
+				225FD78D1DDAF85C008CF7E4 /* Sources */,
+				225FD78E1DDAF85C008CF7E4 /* Frameworks */,
+				225FD78F1DDAF85C008CF7E4 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				225FD7971DDAF85C008CF7E4 /* PBXTargetDependency */,
+			);
+			name = TOScrollBarExampleTests;
+			productName = TOScrollBarExampleTests;
+			productReference = 225FD7911DDAF85C008CF7E4 /* TOScrollBarExampleTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -130,6 +180,12 @@
 						CreatedOnToolsVersion = 8.1;
 						DevelopmentTeam = 6LF3GMKZAB;
 						ProvisioningStyle = Automatic;
+					};
+					225FD7901DDAF85C008CF7E4 = {
+						CreatedOnToolsVersion = 8.2;
+						DevelopmentTeam = 6LF3GMKZAB;
+						ProvisioningStyle = Automatic;
+						TestTargetID = 222F87B61DCE453B0068DE2F;
 					};
 				};
 			};
@@ -147,6 +203,7 @@
 			projectRoot = "";
 			targets = (
 				222F87B61DCE453B0068DE2F /* TOScrollBarExample */,
+				225FD7901DDAF85C008CF7E4 /* TOScrollBarExampleTests */,
 			);
 		};
 /* End PBXProject section */
@@ -159,6 +216,13 @@
 				222F87CA1DCE453B0068DE2F /* LaunchScreen.storyboard in Resources */,
 				222F87C71DCE453B0068DE2F /* Assets.xcassets in Resources */,
 				222F87C51DCE453B0068DE2F /* Main.storyboard in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		225FD78F1DDAF85C008CF7E4 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -177,7 +241,23 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		225FD78D1DDAF85C008CF7E4 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				225FD7941DDAF85C008CF7E4 /* TOScrollBarExampleTests.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		225FD7971DDAF85C008CF7E4 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 222F87B61DCE453B0068DE2F /* TOScrollBarExample */;
+			targetProxy = 225FD7961DDAF85C008CF7E4 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
 		222F87C31DCE453B0068DE2F /* Main.storyboard */ = {
@@ -315,6 +395,34 @@
 			};
 			name = Release;
 		};
+		225FD7981DDAF85C008CF7E4 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				DEVELOPMENT_TEAM = 6LF3GMKZAB;
+				INFOPLIST_FILE = TOScrollBarExampleTests/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 10.2;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = co.timoliver.TOScrollBarExampleTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/TOScrollBarExample.app/TOScrollBarExample";
+			};
+			name = Debug;
+		};
+		225FD7991DDAF85C008CF7E4 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				DEVELOPMENT_TEAM = 6LF3GMKZAB;
+				INFOPLIST_FILE = TOScrollBarExampleTests/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 10.2;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = co.timoliver.TOScrollBarExampleTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/TOScrollBarExample.app/TOScrollBarExample";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -335,6 +443,14 @@
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
+		};
+		225FD79A1DDAF85C008CF7E4 /* Build configuration list for PBXNativeTarget "TOScrollBarExampleTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				225FD7981DDAF85C008CF7E4 /* Debug */,
+				225FD7991DDAF85C008CF7E4 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
 		};
 /* End XCConfigurationList section */
 	};
