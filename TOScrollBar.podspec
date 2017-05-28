@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name     = 'TOScrollBar'
-  s.version  = '0.0.1'
+  s.version  = '0.0.2'
   s.license  =  { :type => 'MIT', :file => 'LICENSE' }
   s.summary  = 'An interactive scroll bar for to easily traverse comically massive scroll views.'
   s.homepage = 'https://github.com/TimOliver/TOScrollBar'
