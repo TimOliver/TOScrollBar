@@ -464,7 +464,7 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
 
     // If the user is doing really granualar swipes, add a subtle amount
     // of vertical animation so the scroll view isn't jumping on each frame
-    [self setScrollYOffsetForHandleYOffset:floorf(handleFrame.origin.y) animated:(delta < 0.51f)];
+    [self setScrollYOffsetForHandleYOffset:floorf(handleFrame.origin.y) animated:NO]; //(delta < 0.51f)
 }
 
 - (void)touchesEnded:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event
