@@ -55,6 +55,8 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
 
 @property (nonatomic, weak, readwrite) UIScrollView *scrollView;   // The parent scroll view in which we belong
 
+@property (nonatomic, assign) BOOL userHidden;          // View was explicitly hidden by the user as opposed to us
+
 @property (nonatomic, strong) UIImageView *trackView;   // The track indicating the scrollable distance
 @property (nonatomic, strong) UIImageView *handleView;  // The handle that may be dragged in the scroll bar
 
@@ -66,20 +68,6 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
 @property (nonatomic, assign) BOOL disabled;            // Disabled when there's not enough scroll content to merit showing this
 
 @property (nonatomic, strong) UIImpactFeedbackGenerator *feedbackGenerator; // Taptic feedback for iPhone 7 and above
-
-- (void)setUpInitialProperties;
-- (void)setUpViews;
-- (void)configureViewsForStyle:(TOScrollBarStyle)style;
-- (void)configureScrollView:(UIScrollView *)scrollView;
-- (void)restoreScrollView:(UIScrollView *)scrollView;
-
-- (void)updateStateForScrollView;
-- (void)layoutInScrollView;
-- (CGFloat)heightOfHandleForContentSize;
-
-- (void)setScrollYOffsetForHandleYOffset:(CGFloat)yOffset;
-
-+ (UIImage *)verticalCapsuleImageWithWidth:(CGFloat)width;
 
 @end
 
@@ -93,6 +81,7 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
 {
     if (self = [super initWithFrame:CGRectZero]) {
         _style = style;
+        [self setUpInitialProperties];
     }
     
     return self;
@@ -228,7 +217,7 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     CGRect frame = _scrollView.frame;
     CGSize contentSize = _scrollView.contentSize;
     self.disabled = (contentSize.height / frame.size.height) < _minimumContentHeightScale;
-    self.hidden = (self.disabled || self.hidden);
+    [self setHidden:(self.disabled || self.userHidden) animated:NO];
 }
 
 - (void)layoutInScrollView
@@ -475,7 +464,7 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     
     // If the user is doing really granualar swipes, add a subtle amount
     // of vertical animation so the scroll view isn't jumping on each frame
-    BOOL animate = (delta < 0.5f);
+    BOOL animate = (delta < 0.51f);
     void (^offsetBlock)() = ^{ [self setScrollYOffsetForHandleYOffset:floorf(handleFrame.origin.y)]; };
     
     // Update the scroll view without animation
@@ -487,8 +476,8 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     // Animate the scroll view offset
     [UIView animateWithDuration:0.25f
                           delay:0.0f
-         usingSpringWithDamping:1.0f
-          initialSpringVelocity:0.1f
+//         usingSpringWithDamping:1.0f
+//          initialSpringVelocity:0.1f
                         options:UIViewAnimationOptionBeginFromCurrentState
                      animations:offsetBlock
                      completion:nil];
@@ -543,13 +532,9 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     self.handleView.tintColor = handleTintColor;
 }
 
-- (BOOL)hidden
-{
-    return super.hidden;
-}
-
 - (void)setHidden:(BOOL)hidden
 {
+    self.userHidden = hidden;
     [self setHidden:hidden animated:NO];
 }
 
