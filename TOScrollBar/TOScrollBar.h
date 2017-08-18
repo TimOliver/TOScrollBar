@@ -65,6 +65,9 @@ NS_ASSUME_NONNULL_BEGIN
 /** The scroll view in which this scroll bar has been added. */
 @property (nonatomic, weak, readonly) UIScrollView *scrollView;
 
+/** Whether the track responds to user input. Defaults to true. */
+@property (nonatomic) BOOL acceptsUserInputOnTrack;
+
 /** 
  Creates a new instance of the scroll bar view 
  
