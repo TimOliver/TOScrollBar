@@ -491,6 +491,17 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     self.dragging = NO;
 }
 
+-(BOOL)pointInside:(CGPoint)point withEvent:(UIEvent *)event {
+	if (self.acceptsUserInputOnTrack) {
+		return [super pointInside:point withEvent:event];
+	} else {
+		CGFloat handleMinY = CGRectGetMinY(self.handleView.frame);
+		CGFloat handleMaxY = CGRectGetMaxY(self.handleView.frame);
+		
+		return (0 <= point.x) && (handleMinY <= point.y) && (point.y <= handleMaxY);
+	}
+}
+
 - (UIView*)hitTest:(CGPoint)point withEvent:(UIEvent *)event
 {
     UIView *result = [super hitTest:point withEvent:event];
