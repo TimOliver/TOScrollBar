@@ -227,6 +227,10 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     CGPoint contentOffset  = _scrollView.contentOffset;
     CGFloat halfWidth      = (kTOScrollBarWidth * 0.5f);
 
+    if (@available(iOS 11.0, *)) {
+        insets = _scrollView.safeAreaInsets;
+    }
+
     // Contract the usable space by the scroll view's content inset (eg navigation/tool bars)
     scrollViewFrame.size.height -= (insets.top + insets.bottom);
 
@@ -275,6 +279,10 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
 
     // Work out the y offset of the handle
     UIEdgeInsets contentInset = _scrollView.contentInset;
+    if (@available(iOS 11.0, *)) {
+        contentInset = _scrollView.safeAreaInsets;
+    }
+
     CGPoint contentOffset     = _scrollView.contentOffset;
     CGSize contentSize        = _scrollView.contentSize;
     CGRect scrollViewFrame    = _scrollView.frame;
