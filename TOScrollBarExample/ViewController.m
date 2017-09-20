@@ -9,7 +9,7 @@
 #import "ViewController.h"
 #import "TOScrollBar.h"
 
-@interface ViewController ()
+@interface ViewController () <UISearchResultsUpdating>
 
 @property (nonatomic, assign) BOOL darkMode;
 @property (nonatomic, assign) BOOL hidden;
@@ -25,7 +25,7 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    
+
     // Create a scroll bar object
     TOScrollBar *scrollBar = [[TOScrollBar alloc] init];
     
@@ -47,6 +47,15 @@
     // Add a button to toggle showing the scroll bar
     UIBarButtonItem *hideItem = [[UIBarButtonItem alloc] initWithTitle:@"Hide" style:UIBarButtonItemStylePlain target:self action:@selector(hideButtonTapped:)];
     self.navigationItem.leftBarButtonItem = hideItem;
+
+    if (@available(iOS 11.0, *)) {
+        self.navigationController.navigationBar.prefersLargeTitles = YES;
+        scrollBar.insetForLargeTitles = YES;
+
+        UISearchController *searchController = [[UISearchController alloc] initWithSearchResultsController:nil];
+        searchController.searchResultsUpdater = self;
+        self.navigationItem.searchController = searchController;
+    }
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
@@ -104,6 +113,10 @@
     self.hidden = !self.hidden;
     button.title = self.hidden ? @"Show" : @"Hide";
     [self.tableView.to_scrollBar setHidden:self.hidden animated:YES];
+}
+
+- (void)updateSearchResultsForSearchController:(UISearchController *)searchController {
+
 }
 
 @end

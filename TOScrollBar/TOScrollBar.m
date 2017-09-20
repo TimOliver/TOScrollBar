@@ -63,6 +63,10 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
 @property (nonatomic, assign, readwrite) BOOL dragging; // The user is presently dragging the handle
 @property (nonatomic, assign) CGFloat yOffset;          // The offset from the center of the thumb
 
+@property (nonatomic, assign) CGFloat originalYOffset;  // The original placement of the scroll bar when the user started dragging
+@property (nonatomic, assign) CGFloat originalHeight;   // The original height of the scroll bar when the user started dragging
+@property (nonatomic, assign) CGFloat originalTopInset; // The original safe area inset of the scroll bar when the user started dragging
+
 @property (nonatomic, assign) CGFloat horizontalOffset; // The horizontal offset when the edge inset is too small for the touch region
 
 @property (nonatomic, assign) BOOL disabled;            // Disabled when there's not enough scroll content to merit showing this
@@ -228,14 +232,19 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     CGFloat halfWidth      = (kTOScrollBarWidth * 0.5f);
 
     if (@available(iOS 11.0, *)) {
-        insets = _scrollView.safeAreaInsets;
+        insets = _scrollView.adjustedContentInset;
     }
 
     // Contract the usable space by the scroll view's content inset (eg navigation/tool bars)
     scrollViewFrame.size.height -= (insets.top + insets.bottom);
 
+    CGFloat largeTitleDelta = 0.0f;
+    if (_insetForLargeTitles) {
+        largeTitleDelta = fabs(MIN(insets.top + contentOffset.y, 0.0f));
+    }
+
     // Work out the final height be further contracting by the padding
-    CGFloat height = scrollViewFrame.size.height - (_verticalInset.top + _verticalInset.bottom);
+    CGFloat height = (scrollViewFrame.size.height - (_verticalInset.top + _verticalInset.bottom)) - largeTitleDelta;
 
     // Work out how much we have to offset the track by to make sure all of the parent view
     // is visible at the edge of the screen (Or else we'll be unable to tap properly)
@@ -244,13 +253,20 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
 
     CGRect frame = CGRectZero;
     frame.size.width = kTOScrollBarWidth;
-    frame.size.height = height;
+    frame.size.height = (_dragging ? _originalHeight : height);
     frame.origin.x = scrollViewFrame.size.width - (_edgeInset + halfWidth);
     frame.origin.x = MIN(frame.origin.x, scrollViewFrame.size.width - kTOScrollBarWidth);
 
-    frame.origin.y = _verticalInset.top;
+    if (_dragging) {
+        frame.origin.y = _originalYOffset;
+    }
+    else {
+        frame.origin.y = _verticalInset.top;
+        frame.origin.y += insets.top;
+        frame.origin.y += largeTitleDelta;
+    }
+
     frame.origin.y += contentOffset.y;
-    frame.origin.y += insets.top;
 
     self.frame = frame;
 }
@@ -323,6 +339,11 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     UIEdgeInsets inset = _scrollView.contentInset;
     CGSize contentSize = _scrollView.contentSize;
 
+    if (@available(iOS 11.0, *)) {
+        inset = _scrollView.adjustedContentInset;
+    }
+    inset.top = _originalTopInset;
+
     CGFloat totalScrollSize = (contentSize.height + inset.top + inset.bottom) - frame.size.height;
     CGFloat scrollOffset = totalScrollSize * positionRatio;
     scrollOffset -= inset.top;
@@ -330,7 +351,10 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     CGPoint contentOffset = _scrollView.contentOffset;
     contentOffset.y = scrollOffset;
 
-    [self.scrollView setContentOffset:contentOffset animated:animated];
+    // Animate to help coax the large title navigation bar to behave
+    [UIView animateWithDuration:animated ? 0.1f : 0.00001f animations:^{
+        [self.scrollView setContentOffset:contentOffset animated:NO];
+    }];
 }
 
 #pragma mark - Scroll View Integration -
@@ -393,6 +417,16 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
 
     self.scrollView.scrollEnabled = NO;
     self.dragging = YES;
+
+    // Capture the original position
+    self.originalHeight = self.frame.size.height;
+    self.originalYOffset = self.frame.origin.y - self.scrollView.contentOffset.y;
+
+    if (@available(iOS 11.0, *)) {
+        self.originalTopInset = _scrollView.adjustedContentInset.top;
+    } else {
+        self.originalTopInset = _scrollView.contentInset.top;
+    }
 
     // Derive the touch from the scroll view as this view is moving up and down the scroll view
     CGPoint touchPoint = [touches.anyObject locationInView:self];
@@ -479,12 +513,20 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
 {
     self.scrollView.scrollEnabled = YES;
     self.dragging = NO;
+
+    [UIView animateWithDuration:0.5f delay:0.0f usingSpringWithDamping:1.0f initialSpringVelocity:0.5f options:0 animations:^{
+        [self layoutInScrollView];
+    } completion:nil];
 }
 
 - (void)touchesCancelled:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event
 {
     self.scrollView.scrollEnabled = YES;
     self.dragging = NO;
+
+    [UIView animateWithDuration:0.5f delay:0.0f usingSpringWithDamping:1.0f initialSpringVelocity:0.5f options:0 animations:^{
+        [self layoutInScrollView];
+    } completion:nil];
 }
 
 - (UIView*)hitTest:(CGPoint)point withEvent:(UIEvent *)event

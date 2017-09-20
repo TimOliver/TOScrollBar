@@ -35,6 +35,10 @@ NS_ASSUME_NONNULL_BEGIN
 /* The visual style of the scroll bar, either light or dark */
 @property (nonatomic, assign) TOScrollBarStyle style;
 
+/** Aligns the scroll bar to the top of the scroll view content offset.
+     Set this to `YES` when using this in a view controller with iOS 11 large titles. */
+@property (nonatomic, assign) BOOL insetForLargeTitles;
+
 /** The amount of padding above and below the scroll bar (Only top and bottom values are counted. Default is {20,20} ) */
 @property (nonatomic, assign) UIEdgeInsets verticalInset;
 
