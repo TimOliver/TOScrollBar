@@ -516,6 +516,7 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
 
     [UIView animateWithDuration:0.5f delay:0.0f usingSpringWithDamping:1.0f initialSpringVelocity:0.5f options:0 animations:^{
         [self layoutInScrollView];
+        [self layoutIfNeeded];
     } completion:nil];
 }
 
@@ -526,6 +527,7 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
 
     [UIView animateWithDuration:0.5f delay:0.0f usingSpringWithDamping:1.0f initialSpringVelocity:0.5f options:0 animations:^{
         [self layoutInScrollView];
+        [self layoutIfNeeded];
     } completion:nil];
 }
 
