@@ -255,6 +255,10 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     frame.size.width = kTOScrollBarWidth;
     frame.size.height = (_dragging ? _originalHeight : height);
     frame.origin.x = scrollViewFrame.size.width - (_edgeInset + halfWidth);
+    if (@available(iOS 11.0, *)) {
+        frame.origin.x -= _scrollView.safeAreaInsets.right;
+    }
+
     frame.origin.x = MIN(frame.origin.x, scrollViewFrame.size.width - kTOScrollBarWidth);
 
     if (_dragging) {
