@@ -77,4 +77,4 @@ This scroll bar is the first component in a series of upgrades I'm planning in a
 
 # License
 
-`TOScrollBar` is available under the MIT license. Please see the [LICENSE](LICENSE) file for more information
+`TOScrollBar` is available under the MIT license. Please see the [LICENSE](LICENSE) file for more information. ![analytics](https://ga-beacon.appspot.com/UA-5643664-16/TOScrollbar/README.md?pixel)
