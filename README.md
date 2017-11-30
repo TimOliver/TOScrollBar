@@ -78,3 +78,8 @@ This scroll bar is the first component in a series of upgrades I'm planning in a
 # License
 
 `TOScrollBar` is available under the MIT license. Please see the [LICENSE](LICENSE) file for more information. ![analytics](https://ga-beacon.appspot.com/UA-5643664-16/TOScrollbar/README.md?pixel)
+
+## Support on Beerpay
+Hey dude! Help me out for a couple of :beers:!
+
+[![Beerpay](https://beerpay.io/TimOliver/TOScrollBar/badge.svg?style=beer-square)](https://beerpay.io/TimOliver/TOScrollBar)  [![Beerpay](https://beerpay.io/TimOliver/TOScrollBar/make-wish.svg?style=flat-square)](https://beerpay.io/TimOliver/TOScrollBar?focus=wish)
