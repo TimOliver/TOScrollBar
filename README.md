@@ -7,6 +7,8 @@
 [![Version](https://img.shields.io/cocoapods/v/TOScrollBar.svg?style=flat)](http://cocoadocs.org/docsets/TOScrollBar)
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/TimOliver/TOScrollBar/master/LICENSE)
 [![Platform](https://img.shields.io/cocoapods/p/TOScrollBar.svg?style=flat)](http://cocoadocs.org/docsets/TOScrollBar)
+[![Beerpay](https://beerpay.io/TimOliver/TOScrollBar/badge.svg?style=flat)](https://beerpay.io/TimOliver/TOScrollBar)
+[![PayPal](https://img.shields.io/badge/paypal-donate-blue.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=M4RKULAVKV7K8)
 
 `TOScrollBar` is a UI component that can be inserted into `UIScrollView` instances, allowing the user to traverse the entire scroll view in one swiping gesture.
 
@@ -78,8 +80,3 @@ This scroll bar is the first component in a series of upgrades I'm planning in a
 # License
 
 `TOScrollBar` is available under the MIT license. Please see the [LICENSE](LICENSE) file for more information. ![analytics](https://ga-beacon.appspot.com/UA-5643664-16/TOScrollbar/README.md?pixel)
-
-## Support on Beerpay
-Hey dude! Help me out for a couple of :beers:!
-
-[![Beerpay](https://beerpay.io/TimOliver/TOScrollBar/badge.svg?style=beer-square)](https://beerpay.io/TimOliver/TOScrollBar)  [![Beerpay](https://beerpay.io/TimOliver/TOScrollBar/make-wish.svg?style=flat-square)](https://beerpay.io/TimOliver/TOScrollBar?focus=wish)
