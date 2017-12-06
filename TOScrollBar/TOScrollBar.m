@@ -362,9 +362,14 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     contentOffset.y = scrollOffset;
 
     // Animate to help coax the large title navigation bar to behave
-    [UIView animateWithDuration:animated ? 0.1f : 0.00001f animations:^{
+    if (@available(iOS 11.0, *)) {
+        [UIView animateWithDuration:animated ? 0.1f : 0.00001f animations:^{
+            [self.scrollView setContentOffset:contentOffset animated:NO];
+        }];
+    }
+    else {
         [self.scrollView setContentOffset:contentOffset animated:NO];
-    }];
+    }
 }
 
 #pragma mark - Scroll View Integration -
