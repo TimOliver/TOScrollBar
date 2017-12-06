@@ -251,16 +251,19 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     CGFloat horizontalOffset = halfWidth - _edgeInset;
     self.horizontalOffset = (horizontalOffset > 0.0f) ? horizontalOffset : 0.0f;
 
+    // Work out the frame for the scroll view
     CGRect frame = CGRectZero;
+    
+    // Size
     frame.size.width = kTOScrollBarWidth;
     frame.size.height = (_dragging ? _originalHeight : height);
+    
+    // Horizontal placement
     frame.origin.x = scrollViewFrame.size.width - (_edgeInset + halfWidth);
-    if (@available(iOS 11.0, *)) {
-        frame.origin.x -= _scrollView.safeAreaInsets.right;
-    }
-
+    if (@available(iOS 11.0, *)) { frame.origin.x -= _scrollView.safeAreaInsets.right; }
     frame.origin.x = MIN(frame.origin.x, scrollViewFrame.size.width - kTOScrollBarWidth);
 
+    // Vertical placement in scroll view
     if (_dragging) {
         frame.origin.y = _originalYOffset;
     }
@@ -269,10 +272,13 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
         frame.origin.y += insets.top;
         frame.origin.y += largeTitleDelta;
     }
-
     frame.origin.y += contentOffset.y;
 
+    // Set the frame
     self.frame = frame;
+    
+    // Bring the scroll bar to the front in case other subviews were subsequently added over it
+    [self.superview bringSubviewToFront:self];
 }
 
 - (void)layoutSubviews
