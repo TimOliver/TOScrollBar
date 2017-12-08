@@ -120,7 +120,6 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     _minimumContentHeightScale = kTOScrollBarMinimumContentScale;
     _verticalInset = UIEdgeInsetsMake(kTOScrollBarVerticalPadding, 0.0f, kTOScrollBarVerticalPadding, 0.0f);
     _feedbackGenerator = [[UIImpactFeedbackGenerator alloc] initWithStyle:UIImpactFeedbackStyleLight];
-	_acceptsUserInputOnTrack = YES;
 }
 
 - (void)setUpViews
@@ -456,7 +455,7 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
         return;
     }
 
-	if (self.acceptsUserInputOnTrack) {
+	if (!self.handleExclusiveInteractionEnabled) {
 		// User tapped somewhere else, animate the handle to that point
 		CGFloat halfHeight = (handleFrame.size.height * 0.5f);
 
@@ -493,7 +492,7 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     CGFloat minimumY = 0.0f;
     CGFloat maximumY = trackFrame.size.height - handleFrame.size.height;
 
-	if (!self.acceptsUserInputOnTrack) {
+	if (self.handleExclusiveInteractionEnabled) {
 		if (touchPoint.y < (handleFrame.origin.y - 20) ||
 			touchPoint.y > handleFrame.origin.y + (handleFrame.size.height + 20))
 		{
@@ -558,10 +557,12 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     } completion:nil];
 }
 
--(BOOL)pointInside:(CGPoint)point withEvent:(UIEvent *)event {
-	if (self.acceptsUserInputOnTrack) {
+- (BOOL)pointInside:(CGPoint)point withEvent:(UIEvent *)event {
+	
+    if (!self.handleExclusiveInteractionEnabled) {
 		return [super pointInside:point withEvent:event];
-	} else {
+	}
+    else {
 		CGFloat handleMinY = CGRectGetMinY(self.handleView.frame);
 		CGFloat handleMaxY = CGRectGetMaxY(self.handleView.frame);
 		
