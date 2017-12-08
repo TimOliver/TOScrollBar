@@ -557,20 +557,19 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     } completion:nil];
 }
 
-- (BOOL)pointInside:(CGPoint)point withEvent:(UIEvent *)event {
-	
+- (BOOL)pointInside:(CGPoint)point withEvent:(UIEvent *)event
+{
     if (!self.handleExclusiveInteractionEnabled) {
 		return [super pointInside:point withEvent:event];
 	}
     else {
 		CGFloat handleMinY = CGRectGetMinY(self.handleView.frame);
 		CGFloat handleMaxY = CGRectGetMaxY(self.handleView.frame);
-		
 		return (0 <= point.x) && (handleMinY <= point.y) && (point.y <= handleMaxY);
 	}
 }
 
-- (UIView*)hitTest:(CGPoint)point withEvent:(UIEvent *)event
+- (UIView *)hitTest:(CGPoint)point withEvent:(UIEvent *)event
 {
     UIView *result = [super hitTest:point withEvent:event];
 
