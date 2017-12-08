@@ -455,25 +455,27 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
         return;
     }
 
-    // User tapped somewhere else, animate the handle to that point
-    CGFloat halfHeight = (handleFrame.size.height * 0.5f);
+	if (!self.handleExclusiveInteractionEnabled) {
+		// User tapped somewhere else, animate the handle to that point
+		CGFloat halfHeight = (handleFrame.size.height * 0.5f);
 
-    CGFloat destinationYOffset = touchPoint.y - halfHeight;
-    destinationYOffset = MAX(0.0f, destinationYOffset);
-    destinationYOffset = MIN(self.frame.size.height - halfHeight, destinationYOffset);
+		CGFloat destinationYOffset = touchPoint.y - halfHeight;
+		destinationYOffset = MAX(0.0f, destinationYOffset);
+		destinationYOffset = MIN(self.frame.size.height - halfHeight, destinationYOffset);
 
-    self.yOffset = (touchPoint.y - destinationYOffset);
-    handleFrame.origin.y = destinationYOffset;
+		self.yOffset = (touchPoint.y - destinationYOffset);
+		handleFrame.origin.y = destinationYOffset;
 
-    [UIView animateWithDuration:0.2f
-                          delay:0.0f
-         usingSpringWithDamping:1.0f
-          initialSpringVelocity:0.1f options:UIViewAnimationOptionBeginFromCurrentState
-                     animations:^{
-                         self.handleView.frame = handleFrame;
-                     } completion:nil];
+		[UIView animateWithDuration:0.2f
+							  delay:0.0f
+			 usingSpringWithDamping:1.0f
+			  initialSpringVelocity:0.1f options:UIViewAnimationOptionBeginFromCurrentState
+						 animations:^{
+							 self.handleView.frame = handleFrame;
+						 } completion:nil];
 
-    [self setScrollYOffsetForHandleYOffset:floorf(destinationYOffset) animated:NO];
+		[self setScrollYOffsetForHandleYOffset:floorf(destinationYOffset) animated:NO];
+	}
 }
 
 - (void)touchesMoved:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event
@@ -490,6 +492,15 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     CGFloat minimumY = 0.0f;
     CGFloat maximumY = trackFrame.size.height - handleFrame.size.height;
 
+	if (self.handleExclusiveInteractionEnabled) {
+		if (touchPoint.y < (handleFrame.origin.y - 20) ||
+			touchPoint.y > handleFrame.origin.y + (handleFrame.size.height + 20))
+		{
+			// This touch is not on the handle; eject.
+			return;
+		}
+	}
+	
     // Apply the updated Y value plus the previous offset
     delta = handleFrame.origin.y;
     handleFrame.origin.y = touchPoint.y - _yOffset;
@@ -546,7 +557,19 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     } completion:nil];
 }
 
-- (UIView*)hitTest:(CGPoint)point withEvent:(UIEvent *)event
+- (BOOL)pointInside:(CGPoint)point withEvent:(UIEvent *)event
+{
+    if (!self.handleExclusiveInteractionEnabled) {
+		return [super pointInside:point withEvent:event];
+	}
+    else {
+		CGFloat handleMinY = CGRectGetMinY(self.handleView.frame);
+		CGFloat handleMaxY = CGRectGetMaxY(self.handleView.frame);
+		return (0 <= point.x) && (handleMinY <= point.y) && (point.y <= handleMaxY);
+	}
+}
+
+- (UIView *)hitTest:(CGPoint)point withEvent:(UIEvent *)event
 {
     UIView *result = [super hitTest:point withEvent:event];
 
