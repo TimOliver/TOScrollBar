@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Fixed
 - A bug in iOS 11.2 where tapping on the track wouldn't perform the scroll until the user released their finger.
+- A bug where content in the scroll view was appearing over the scroll bar.
 
 ## 0.0.4 - 2017-09-21
 
