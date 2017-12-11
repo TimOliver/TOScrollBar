@@ -15,6 +15,7 @@
 		222F87CA1DCE453B0068DE2F /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 222F87C81DCE453B0068DE2F /* LaunchScreen.storyboard */; };
 		223B9BF71DCE496F008601D2 /* TOScrollBar.m in Sources */ = {isa = PBXBuildFile; fileRef = 223B9BF61DCE496F008601D2 /* TOScrollBar.m */; };
 		225FD7941DDAF85C008CF7E4 /* TOScrollBarExampleTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 225FD7931DDAF85C008CF7E4 /* TOScrollBarExampleTests.m */; };
+		22B460601FDBE5EF00386CED /* TOScrollBarGestureRecognizer.m in Sources */ = {isa = PBXBuildFile; fileRef = 22B4605F1FDBE5EF00386CED /* TOScrollBarGestureRecognizer.m */; };
 		22CCCCD11DD064B90092A89D /* UIScrollView+TOScrollBar.m in Sources */ = {isa = PBXBuildFile; fileRef = 22CCCCD01DD064B90092A89D /* UIScrollView+TOScrollBar.m */; };
 /* End PBXBuildFile section */
 
@@ -44,6 +45,8 @@
 		225FD7911DDAF85C008CF7E4 /* TOScrollBarExampleTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TOScrollBarExampleTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		225FD7931DDAF85C008CF7E4 /* TOScrollBarExampleTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TOScrollBarExampleTests.m; sourceTree = "<group>"; };
 		225FD7951DDAF85C008CF7E4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		22B4605E1FDBE5EF00386CED /* TOScrollBarGestureRecognizer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TOScrollBarGestureRecognizer.h; sourceTree = "<group>"; };
+		22B4605F1FDBE5EF00386CED /* TOScrollBarGestureRecognizer.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TOScrollBarGestureRecognizer.m; sourceTree = "<group>"; };
 		22CCCCCF1DD064B90092A89D /* UIScrollView+TOScrollBar.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIScrollView+TOScrollBar.h"; sourceTree = "<group>"; };
 		22CCCCD01DD064B90092A89D /* UIScrollView+TOScrollBar.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIScrollView+TOScrollBar.m"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -114,6 +117,8 @@
 			children = (
 				223B9BF51DCE496F008601D2 /* TOScrollBar.h */,
 				223B9BF61DCE496F008601D2 /* TOScrollBar.m */,
+				22B4605E1FDBE5EF00386CED /* TOScrollBarGestureRecognizer.h */,
+				22B4605F1FDBE5EF00386CED /* TOScrollBarGestureRecognizer.m */,
 				22CCCCCF1DD064B90092A89D /* UIScrollView+TOScrollBar.h */,
 				22CCCCD01DD064B90092A89D /* UIScrollView+TOScrollBar.m */,
 			);
@@ -173,7 +178,7 @@
 		222F87AF1DCE453B0068DE2F /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0830;
+				LastUpgradeCheck = 0920;
 				ORGANIZATIONNAME = "Tim Oliver";
 				TargetAttributes = {
 					222F87B61DCE453B0068DE2F = {
@@ -233,6 +238,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				222F87C21DCE453B0068DE2F /* ViewController.m in Sources */,
+				22B460601FDBE5EF00386CED /* TOScrollBarGestureRecognizer.m in Sources */,
 				222F87BF1DCE453B0068DE2F /* AppDelegate.m in Sources */,
 				222F87BC1DCE453B0068DE2F /* main.m in Sources */,
 				223B9BF71DCE496F008601D2 /* TOScrollBar.m in Sources */,
@@ -287,7 +293,9 @@
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
@@ -295,7 +303,11 @@
 				CLANG_WARN_ENUM_CONVERSION = YES;
 				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_SUSPICIOUS_MOVES = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
@@ -336,7 +348,9 @@
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
@@ -344,7 +358,11 @@
 				CLANG_WARN_ENUM_CONVERSION = YES;
 				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_SUSPICIOUS_MOVES = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;

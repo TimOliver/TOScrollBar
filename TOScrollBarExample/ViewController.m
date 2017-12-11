@@ -29,6 +29,9 @@
     // Create a scroll bar object
     TOScrollBar *scrollBar = [[TOScrollBar alloc] init];
     
+    // Uncomment this to disable tapping the track view to jump around
+    // scrollBar.handleExclusiveInteractionEnabled = YES;
+    
     // Add the scroll bar to the table view
     [self.tableView to_addScrollBar:scrollBar];
     
