@@ -22,6 +22,7 @@
 
 #import "TOScrollBar.h"
 #import "UIScrollView+TOScrollBar.h"
+#import "TOScrollBarGestureRecognizer.h"
 
 /** Default values for the scroll bar */
 static const CGFloat kTOScrollBarTrackWidth      = 2.0f;     // The default width of the scrollable space indicator
@@ -73,6 +74,8 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
 
 @property (nonatomic, strong) UIImpactFeedbackGenerator *feedbackGenerator; // Taptic feedback for iPhone 7 and above
 
+@property (nonatomic, strong) TOScrollBarGestureRecognizer *gestureRecognizer; // Our custom recognizer for handling user interactions with the scroll bar
+
 @end
 
 /************************************************************************/
@@ -120,6 +123,7 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     _minimumContentHeightScale = kTOScrollBarMinimumContentScale;
     _verticalInset = UIEdgeInsetsMake(kTOScrollBarVerticalPadding, 0.0f, kTOScrollBarVerticalPadding, 0.0f);
     _feedbackGenerator = [[UIImpactFeedbackGenerator alloc] initWithStyle:UIImpactFeedbackStyleLight];
+    _gestureRecognizer = [[TOScrollBarGestureRecognizer alloc] init];
 }
 
 - (void)setUpViews
@@ -140,6 +144,9 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
 
     // Add the initial styling
     [self configureViewsForStyle:self.style];
+    
+    // Add gesture recognizer
+    [self addGestureRecognizer:self.gestureRecognizer];
 }
 
 - (void)configureViewsForStyle:(TOScrollBarStyle)style
@@ -182,7 +189,7 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     // Restore the scroll view's state
     scrollView.showsVerticalScrollIndicator = _scrollView.showsVerticalScrollIndicator;
 
-    //remove the observers
+    // Remove the observers
     [scrollView removeObserver:self forKeyPath:@"contentOffset"];
     [scrollView removeObserver:self forKeyPath:@"contentSize"];
 }
