@@ -41,12 +41,16 @@
     // ========================================================================
     
     // Make sure it's not nil before we start styling
-    self.tableView.backgroundColor = [UIColor whiteColor];
-    
-    // Add a button to toggle dark mode
-    UIBarButtonItem *darkItem = [[UIBarButtonItem alloc] initWithTitle:@"Dark" style:UIBarButtonItemStylePlain target:self action:@selector(darkModeButtonTapped:)];
-    self.navigationItem.rightBarButtonItem = darkItem;
-    
+    if (@available(iOS 13.0, *)) {}
+    else { self.tableView.backgroundColor = [UIColor whiteColor]; }
+
+    // On iOS 12, show a Dark mode button. We'll rely on the system dark mode otherwise)
+    if (@available(iOS 13.0, *)) { }
+    else {
+        UIBarButtonItem *darkItem = [[UIBarButtonItem alloc] initWithTitle:@"Dark" style:UIBarButtonItemStylePlain target:self action:@selector(darkModeButtonTapped:)];
+        self.navigationItem.rightBarButtonItem = darkItem;
+    }
+
     // Add a button to toggle showing the scroll bar
     UIBarButtonItem *hideItem = [[UIBarButtonItem alloc] initWithTitle:@"Hide" style:UIBarButtonItemStylePlain target:self action:@selector(hideButtonTapped:)];
     self.navigationItem.leftBarButtonItem = hideItem;
@@ -76,8 +80,9 @@
         cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
     }
     
-    
-    cell.textLabel.textColor = self.darkMode ? [UIColor whiteColor] : [UIColor blackColor];
+    if (@available(iOS 13.0, *)) { }
+    else { cell.textLabel.textColor = self.darkMode ? [UIColor whiteColor] : [UIColor blackColor]; }
+
     cell.textLabel.backgroundColor = self.tableView.backgroundColor;
     cell.backgroundColor = self.tableView.backgroundColor;
     

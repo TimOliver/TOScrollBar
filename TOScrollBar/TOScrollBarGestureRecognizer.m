@@ -33,16 +33,16 @@
 @implementation TOScrollBarGestureRecognizer
 
 #pragma mark - Gesture Recognizer Filtering -
-- (BOOL)canPreventGestureRecognizer:(UIGestureRecognizer *)preventedGestureRecognizer
-{
-    // Ensure that the pan gesture recognizer from the scroll view doesn't override the scroll bar
-    UIView *view = preventedGestureRecognizer.view;
-    if ([view isEqual:self.scrollBar.scrollView]) {
-        return YES;
-    }
-    
-    return NO;
-}
+//- (BOOL)canPreventGestureRecognizer:(UIGestureRecognizer *)preventedGestureRecognizer
+//{
+//    // Ensure that the pan gesture recognizer from the scroll view doesn't override the scroll bar
+//    UIView *view = preventedGestureRecognizer.view;
+//    if ([view isEqual:self.scrollBar.scrollView]) {
+//        return YES;
+//    }
+//    
+//    return NO;
+//}
 
 #pragma mark - Touch Interaction -
 - (void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event

@@ -23,16 +23,17 @@
 #import <UIKit/UIKit.h>
 #import "UIScrollView+TOScrollBar.h"
 
+/** The color style for this control */
 typedef NS_ENUM(NSInteger, TOScrollBarStyle) {
-    TOScrollBarStyleDefault,
-    TOScrollBarStyleDark
+    TOScrollBarStyleDefault, // Light mode on iOS 12, system light/dark on iOS 13 and up
+    TOScrollBarStyleDark     // Forces dark mode
 };
 
 NS_ASSUME_NONNULL_BEGIN
 
 @interface TOScrollBar : UIView
 
-/* The visual style of the scroll bar, either light or dark */
+/* The visual style of the scroll bar, either light or dark. */
 @property (nonatomic, assign) TOScrollBarStyle style;
 
 /** Aligns the scroll bar to the top of the scroll view content offset.

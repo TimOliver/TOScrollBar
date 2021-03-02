@@ -74,7 +74,7 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
 
 @property (nonatomic, strong) UIImpactFeedbackGenerator *feedbackGenerator; // Taptic feedback for iPhone 7 and above
 
-@property (nonatomic, strong) TOScrollBarGestureRecognizer *gestureRecognizer; // Our custom recognizer for handling user interactions with the scroll bar
+@property (nonatomic, strong) UIPanGestureRecognizer *gestureRecognizer; // Our custom recognizer for handling user interactions with the scroll bar
 
 @end
 
@@ -123,7 +123,7 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     _minimumContentHeightScale = kTOScrollBarMinimumContentScale;
     _verticalInset = UIEdgeInsetsMake(kTOScrollBarVerticalPadding, 0.0f, kTOScrollBarVerticalPadding, 0.0f);
     _feedbackGenerator = [[UIImpactFeedbackGenerator alloc] initWithStyle:UIImpactFeedbackStyleLight];
-    _gestureRecognizer = [[TOScrollBarGestureRecognizer alloc] initWithTarget:self action:@selector(scrollBarGestureRecognized:)];
+    _gestureRecognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(scrollBarGestureRecognized:)];
 }
 
 - (void)setUpViews
@@ -151,13 +151,23 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
 
 - (void)configureViewsForStyle:(TOScrollBarStyle)style
 {
-    BOOL dark = (style == TOScrollBarStyleDark);
+    // Declare a block that determines the color of the track
+    // view depending on the whether dark mode is active or not.
+    // This can then be re-used for both system API code paths
+    UIColor *(^trackTintColor)(BOOL) = ^UIColor *(BOOL isDark) {
+        CGFloat whiteColor = 0.0f;
+        if (isDark) { whiteColor = 1.0f; }
+        return [UIColor colorWithWhite:whiteColor alpha:0.1f];
+    };
 
-    CGFloat whiteColor = 0.0f;
-    if (dark) {
-        whiteColor = 1.0f;
+    // iOS 13 and up
+    if (@available(iOS 13.0, *)) {
+        self.trackView.tintColor = [UIColor colorWithDynamicProvider:^UIColor *(UITraitCollection *traitCollection) {
+            return trackTintColor(traitCollection.userInterfaceStyle == UIUserInterfaceStyleDark);
+        }];
+    } else { // iOS 12 and below
+        self.trackView.tintColor = trackTintColor(self.style == TOScrollBarStyleDark);
     }
-    self.trackView.tintColor = [UIColor colorWithWhite:whiteColor alpha:0.1f];
 }
 
 - (void)dealloc
