@@ -77,8 +77,6 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
 @property (nonatomic, strong) UIPanGestureRecognizer *panGestureRecognizer; // Recognizer for tracking pan motions
 @property (nonatomic, strong) UILongPressGestureRecognizer *pressGestureRecognizer; // Recognizer for tapping down on the track or scroll view
 
-@property (nonatomic, strong) CADisplayLink *displayLink;
-
 @end
 
 /************************************************************************/
@@ -153,6 +151,7 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     [self configureViewsForStyle:self.style];
     
     // Add gesture recognizer
+    self.panGestureRecognizer.delegate = self;
     [self addGestureRecognizer:self.panGestureRecognizer];
 }
 
@@ -197,6 +196,7 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     [scrollView addObserver:self forKeyPath:@"contentSize" options:NSKeyValueObservingOptionNew context:nil];
 
     // Add tap gesture recognizer to the scroll view
+    self.pressGestureRecognizer.delegate = self;
     [self.scrollView addGestureRecognizer:self.pressGestureRecognizer];
 }
 
@@ -399,6 +399,15 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     }
 }
 
+- (BOOL)handleFrameContainsPoint:(CGPoint)point
+{
+    // Check that a point's Y value places it in the
+    // vertical region of the handle
+    CGRect frame = self.handleView.frame;
+    return point.y > CGRectGetMinY(frame) &&
+    point.y < CGRectGetMaxY(frame);
+}
+
 #pragma mark - Scroll View Integration -
 
 - (void)addToScrollView:(UIScrollView *)scrollView
@@ -445,6 +454,17 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     layoutMargins.right = (_edgeInset * 2.0f) + 15.0f; // Magic system number is 20, but we can't infer that from here on time
     layoutMargins.right += offset;
     return layoutMargins;
+}
+
+#pragma mark - Gesture Recognizer Delegate -
+- (BOOL)gestureRecognizerShouldBegin:(UIGestureRecognizer *)gestureRecognizer
+{
+    CGPoint point = [gestureRecognizer locationInView:self];
+    if (gestureRecognizer == self.panGestureRecognizer) {
+        return [self handleFrameContainsPoint:point];
+    }
+
+    return NO;
 }
 
 #pragma mark - User Pan Interaction -
@@ -496,30 +516,7 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
         touchPoint.y < handleFrame.origin.y + (handleFrame.size.height + 20))
     {
         self.yOffset = (touchPoint.y - handleFrame.origin.y);
-        return;
     }
-
-	if (!self.handleExclusiveInteractionEnabled) {
-		// User tapped somewhere else, animate the handle to that point
-		CGFloat halfHeight = (handleFrame.size.height * 0.5f);
-
-		CGFloat destinationYOffset = touchPoint.y - halfHeight;
-		destinationYOffset = MAX(0.0f, destinationYOffset);
-		destinationYOffset = MIN(self.frame.size.height - halfHeight, destinationYOffset);
-
-		self.yOffset = (touchPoint.y - destinationYOffset);
-		handleFrame.origin.y = destinationYOffset;
-
-		[UIView animateWithDuration:0.2f
-							  delay:0.0f
-			 usingSpringWithDamping:1.0f
-			  initialSpringVelocity:0.1f options:UIViewAnimationOptionBeginFromCurrentState
-						 animations:^{
-							 self.handleView.frame = handleFrame;
-						 } completion:nil];
-
-		[self setScrollYOffsetForHandleYOffset:floorf(destinationYOffset) animated:NO];
-	}
 }
 
 - (void)gestureMovedToPoint:(CGPoint)touchPoint
@@ -534,15 +531,6 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     CGFloat minimumY = 0.0f;
     CGFloat maximumY = trackFrame.size.height - handleFrame.size.height;
 
-	if (self.handleExclusiveInteractionEnabled) {
-		if (touchPoint.y < (handleFrame.origin.y - 20) ||
-			touchPoint.y > handleFrame.origin.y + (handleFrame.size.height + 20))
-		{
-			// This touch is not on the handle; eject.
-			return;
-		}
-	}
-	
     // Apply the updated Y value plus the previous offset
     delta = handleFrame.origin.y;
     handleFrame.origin.y = touchPoint.y - _yOffset;
@@ -590,14 +578,9 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
 
 - (BOOL)pointInside:(CGPoint)point withEvent:(UIEvent *)event
 {
-    if (!self.handleExclusiveInteractionEnabled) {
-		return [super pointInside:point withEvent:event];
-	}
-    else {
-		CGFloat handleMinY = CGRectGetMinY(self.handleView.frame);
-		CGFloat handleMaxY = CGRectGetMaxY(self.handleView.frame);
-		return (0 <= point.x) && (handleMinY <= point.y) && (point.y <= handleMaxY);
-	}
+    CGFloat handleMinY = CGRectGetMinY(self.handleView.frame);
+    CGFloat handleMaxY = CGRectGetMaxY(self.handleView.frame);
+    return (0 <= point.x) && (handleMinY <= point.y) && (point.y <= handleMaxY);
 }
 
 - (UIView *)hitTest:(CGPoint)point withEvent:(UIEvent *)event
