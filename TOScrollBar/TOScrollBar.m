@@ -62,11 +62,8 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
 @property (nonatomic, strong) UIView *handleView;  // The handle that may be dragged in the scroll bar
 
 @property (nonatomic, assign, readwrite) BOOL dragging; // The user is presently dragging the handle
-@property (nonatomic, assign) CGFloat yOffset;          // The offset from the center of the thumb
-
-@property (nonatomic, assign) CGFloat originalYOffset;  // The original placement of the scroll bar when the user started dragging
-@property (nonatomic, assign) CGFloat originalHeight;   // The original height of the scroll bar when the user started dragging
-@property (nonatomic, assign) CGFloat originalTopInset; // The original safe area inset of the scroll bar when the user started dragging
+@property (nonatomic, assign) CGRect panOriginRect;     // The original frame of the scroll bar when the pan started
+@property (nonatomic, assign) CGFloat yOffset;          // The offset from the center of the handle and the pan
 
 @property (nonatomic, assign) CGFloat horizontalOffset; // The horizontal offset when the edge inset is too small for the touch region
 
@@ -123,7 +120,7 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     _handleMinimiumHeight = kTOScrollBarHandleMinHeight;
     _minimumContentHeightScale = kTOScrollBarMinimumContentScale;
     _verticalInset = UIEdgeInsetsMake(kTOScrollBarVerticalPadding, 0.0f, kTOScrollBarVerticalPadding, 0.0f);
-    _feedbackGenerator = [[UIImpactFeedbackGenerator alloc] initWithStyle:UIImpactFeedbackStyleLight];
+    _feedbackGenerator = [[UIImpactFeedbackGenerator alloc] initWithStyle:UIImpactFeedbackStyleHeavy];
     _panGestureRecognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(scrollBarPanGestureRecognized:)];
     _pressGestureRecognizer = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(scrollBarTapGestureRecognized:)];
 }
@@ -283,7 +280,7 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     
     // Size
     frame.size.width = kTOScrollBarWidth;
-    frame.size.height = (_dragging ? _originalHeight : height);
+    frame.size.height = height;
     
     // Horizontal placement
     frame.origin.x = scrollViewFrame.size.width - (_edgeInset + halfWidth);
@@ -291,14 +288,9 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     frame.origin.x = MIN(frame.origin.x, scrollViewFrame.size.width - kTOScrollBarWidth);
 
     // Vertical placement in scroll view
-    if (_dragging) {
-        frame.origin.y = _originalYOffset;
-    }
-    else {
-        frame.origin.y = _verticalInset.top;
-        frame.origin.y += insets.top;
-        frame.origin.y += largeTitleDelta;
-    }
+    frame.origin.y = _verticalInset.top;
+    frame.origin.y += insets.top;
+    frame.origin.y += largeTitleDelta;
     frame.origin.y += contentOffset.y;
 
     // Set the frame
@@ -379,7 +371,6 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     if (@available(iOS 11.0, *)) {
         inset = _scrollView.adjustedContentInset;
     }
-    inset.top = _originalTopInset;
 
     CGFloat totalScrollSize = (contentSize.height + inset.top + inset.bottom) - frame.size.height;
     CGFloat scrollOffset = totalScrollSize * positionRatio;
@@ -404,8 +395,8 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     // Check that a point's Y value places it in the
     // vertical region of the handle
     CGRect frame = self.handleView.frame;
-    return point.y > CGRectGetMinY(frame) &&
-    point.y < CGRectGetMaxY(frame);
+    return point.y > CGRectGetMinY(frame) - 20.0f &&
+    point.y < CGRectGetMaxY(frame) + 20.0f;
 }
 
 #pragma mark - Scroll View Integration -
@@ -490,50 +481,47 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
 
 - (void)gestureBeganAtPoint:(CGPoint)touchPoint
 {
-    if (self.disabled) {
-        return;
-    }
+    if (self.disabled) { return; }
 
-    // Warm-up the feedback generator
-    [_feedbackGenerator prepare];
+    // Play a starting impact
+    [_feedbackGenerator impactOccurred];
 
+    // Disable touch input for the scroll view
     self.scrollView.scrollEnabled = NO;
+
+    // Set panning state
+    self.panOriginRect = self.frame;
     self.dragging = YES;
-
-    // Capture the original position
-    self.originalHeight = self.frame.size.height;
-    self.originalYOffset = self.frame.origin.y - self.scrollView.contentOffset.y;
-
-    if (@available(iOS 11.0, *)) {
-        self.originalTopInset = _scrollView.adjustedContentInset.top;
-    } else {
-        self.originalTopInset = _scrollView.contentInset.top;
-    }
 
     // Check if the user tapped inside the handle
     CGRect handleFrame = self.handleView.frame;
-    if (touchPoint.y > (handleFrame.origin.y - 20) &&
-        touchPoint.y < handleFrame.origin.y + (handleFrame.size.height + 20))
-    {
-        self.yOffset = (touchPoint.y - handleFrame.origin.y);
-    }
+    self.yOffset = (touchPoint.y - handleFrame.origin.y);
 }
 
 - (void)gestureMovedToPoint:(CGPoint)touchPoint
 {
-    if (self.disabled) {
-        return;
-    }
+    if (self.disabled) { return; }
 
-    CGFloat delta = 0.0f;
     CGRect handleFrame = _handleView.frame;
     CGRect trackFrame = _trackView.frame;
+
+    CGRect frame = self.frame;
+    CGRect originFrame = self.panOriginRect;
+
     CGFloat minimumY = 0.0f;
     CGFloat maximumY = trackFrame.size.height - handleFrame.size.height;
 
+    // Extract just Y from the touch point
+    CGFloat y = touchPoint.y;
+
+    // If the scroll view has a variable inset (eg, it has a large title),
+    // ensure our source of truth was the frame of the scroll bar when
+    // the pan gesture started, and adjust any new gesture points with the
+    // difference in height
+    y -= (frame.size.height - originFrame.size.height);
+
     // Apply the updated Y value plus the previous offset
-    delta = handleFrame.origin.y;
-    handleFrame.origin.y = touchPoint.y - _yOffset;
+    handleFrame.origin.y = y - _yOffset;
 
     //Clamp the handle, and adjust the y offset to counter going outside the bounds
     if (handleFrame.origin.y < minimumY) {
@@ -549,16 +537,6 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     }
 
     _handleView.frame = handleFrame;
-
-    delta -= handleFrame.origin.y;
-    delta = fabs(delta);
-
-    // If the delta is not 0.0, but we're at either extreme,
-    // this is first frame we've since reaching that point.
-    // Play a taptic feedback impact
-    if (delta > FLT_EPSILON && (CGRectGetMinY(handleFrame) < FLT_EPSILON || CGRectGetMinY(handleFrame) >= maximumY - FLT_EPSILON)) {
-        [_feedbackGenerator impactOccurred];
-    }
 
     // If the user is doing really granualar swipes, add a subtle amount
     // of vertical animation so the scroll view isn't jumping on each frame
