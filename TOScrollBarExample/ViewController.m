@@ -82,9 +82,6 @@
     
     if (@available(iOS 13.0, *)) { }
     else { cell.textLabel.textColor = self.darkMode ? [UIColor whiteColor] : [UIColor blackColor]; }
-
-    cell.textLabel.backgroundColor = self.tableView.backgroundColor;
-    cell.backgroundColor = self.tableView.backgroundColor;
     
     cell.textLabel.text = [NSString stringWithFormat:@"Cell %ld", indexPath.row+1];
     cell.layoutMargins = [tableView.to_scrollBar adjustedTableViewCellLayoutMarginsForMargins:cell.layoutMargins manualOffset:0.0f];
