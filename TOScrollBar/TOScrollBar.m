@@ -58,8 +58,8 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
 
 @property (nonatomic, assign) BOOL userHidden;          // View was explicitly hidden by the user as opposed to us
 
-@property (nonatomic, strong) UIImageView *trackView;   // The track indicating the scrollable distance
-@property (nonatomic, strong) UIImageView *handleView;  // The handle that may be dragged in the scroll bar
+@property (nonatomic, strong) UIView *trackView;   // The track indicating the scrollable distance
+@property (nonatomic, strong) UIView *handleView;  // The handle that may be dragged in the scroll bar
 
 @property (nonatomic, assign, readwrite) BOOL dragging; // The user is presently dragging the handle
 @property (nonatomic, assign) CGFloat yOffset;          // The offset from the center of the thumb
@@ -72,9 +72,12 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
 
 @property (nonatomic, assign) BOOL disabled;            // Disabled when there's not enough scroll content to merit showing this
 
-@property (nonatomic, strong) UIImpactFeedbackGenerator *feedbackGenerator; // Taptic feedback for iPhone 7 and above
+@property (nonatomic, strong) UIImpactFeedbackGenerator *feedbackGenerator; // Taptic feedback for supporting iPhone models
 
-@property (nonatomic, strong) UIPanGestureRecognizer *gestureRecognizer; // Our custom recognizer for handling user interactions with the scroll bar
+@property (nonatomic, strong) UIPanGestureRecognizer *panGestureRecognizer; // Recognizer for tracking pan motions
+@property (nonatomic, strong) UILongPressGestureRecognizer *pressGestureRecognizer; // Recognizer for tapping down on the track or scroll view
+
+@property (nonatomic, strong) CADisplayLink *displayLink;
 
 @end
 
@@ -123,10 +126,11 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     _minimumContentHeightScale = kTOScrollBarMinimumContentScale;
     _verticalInset = UIEdgeInsetsMake(kTOScrollBarVerticalPadding, 0.0f, kTOScrollBarVerticalPadding, 0.0f);
     _feedbackGenerator = [[UIImpactFeedbackGenerator alloc] initWithStyle:UIImpactFeedbackStyleLight];
-    _gestureRecognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(scrollBarGestureRecognized:)];
+    _panGestureRecognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(scrollBarPanGestureRecognized:)];
+    _pressGestureRecognizer = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(scrollBarTapGestureRecognized:)];
 }
 
-- (void)setUpViews
+- (void)setUpViewsWithSuperView:(UIView *)superview
 {
     if (self.trackView || self.handleView) {
         return;
@@ -135,18 +139,21 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     self.backgroundColor = [UIColor clearColor];
 
     // Create and add the track view
-    self.trackView = [[UIImageView alloc] initWithImage:[TOScrollBar verticalCapsuleImageWithWidth:self.trackWidth]];
+    self.trackView = [[UIView alloc] initWithFrame:CGRectZero];
+    self.trackView.layer.cornerRadius = self.trackWidth / 2.0f;
     [self addSubview:self.trackView];
 
     // Add the handle view
-    self.handleView = [[UIImageView alloc] initWithImage:[TOScrollBar verticalCapsuleImageWithWidth:self.handleWidth]];
+    self.handleView = [[UIView alloc] initWithFrame:CGRectZero];
+    self.handleView.layer.cornerRadius = self.handleWidth / 2.0f;
+    self.handleView.backgroundColor = self.tintColor;
     [self addSubview:self.handleView];
 
     // Add the initial styling
     [self configureViewsForStyle:self.style];
     
     // Add gesture recognizer
-    [self addGestureRecognizer:self.gestureRecognizer];
+    [self addGestureRecognizer:self.panGestureRecognizer];
 }
 
 - (void)configureViewsForStyle:(TOScrollBarStyle)style
@@ -162,11 +169,11 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
 
     // iOS 13 and up
     if (@available(iOS 13.0, *)) {
-        self.trackView.tintColor = [UIColor colorWithDynamicProvider:^UIColor *(UITraitCollection *traitCollection) {
+        self.trackView.backgroundColor = [UIColor colorWithDynamicProvider:^UIColor *(UITraitCollection *traitCollection) {
             return trackTintColor(traitCollection.userInterfaceStyle == UIUserInterfaceStyleDark);
         }];
     } else { // iOS 12 and below
-        self.trackView.tintColor = trackTintColor(self.style == TOScrollBarStyleDark);
+        self.trackView.backgroundColor = trackTintColor(self.style == TOScrollBarStyleDark);
     }
 }
 
@@ -188,6 +195,9 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     //Key-value Observers
     [scrollView addObserver:self forKeyPath:@"contentOffset" options:NSKeyValueObservingOptionNew context:nil];
     [scrollView addObserver:self forKeyPath:@"contentSize" options:NSKeyValueObservingOptionNew context:nil];
+
+    // Add tap gesture recognizer to the scroll view
+    [self.scrollView addGestureRecognizer:self.pressGestureRecognizer];
 }
 
 - (void)restoreScrollView:(UIScrollView *)scrollView
@@ -207,7 +217,7 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
 - (void)willMoveToSuperview:(UIView *)newSuperview
 {
     [super willMoveToSuperview:newSuperview];
-    [self setUpViews];
+    [self setUpViewsWithSuperView:newSuperview];
 }
 
 #pragma mark - Content Layout -
@@ -437,8 +447,8 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     return layoutMargins;
 }
 
-#pragma mark - User Interaction -
-- (void)scrollBarGestureRecognized:(TOScrollBarGestureRecognizer *)recognizer
+#pragma mark - User Pan Interaction -
+- (void)scrollBarPanGestureRecognized:(UIPanGestureRecognizer *)recognizer
 {
     CGPoint touchPoint = [recognizer locationInView:self];
     
@@ -606,6 +616,13 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     return result;
 }
 
+#pragma mark - User Tap Interaction -
+
+- (void)scrollBarTapGestureRecognized:(UILongPressGestureRecognizer *)recognizer
+{
+
+}
+
 #pragma mark - Accessors -
 - (void)setStyle:(TOScrollBarStyle)style
 {
@@ -613,18 +630,18 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     [self configureViewsForStyle:style];
 }
 
-- (UIColor *)trackTintColor { return self.trackView.tintColor; }
+- (UIColor *)trackTintColor { return self.trackView.backgroundColor; }
 
 - (void)setTrackTintColor:(UIColor *)trackTintColor
 {
-    self.trackView.tintColor = trackTintColor;
+    self.trackView.backgroundColor = trackTintColor;
 }
 
-- (UIColor *)handleTintColor { return self.handleView.tintColor; }
+- (UIColor *)handleTintColor { return self.handleView.backgroundColor; }
 
 - (void)setHandleTintColor:(UIColor *)handleTintColor
 {
-    self.handleView.tintColor = handleTintColor;
+    self.handleView.backgroundColor = handleTintColor;
 }
 
 - (void)setHidden:(BOOL)hidden
@@ -678,24 +695,6 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
                          super.hidden = hidden;
                      }];
 
-}
-
-#pragma mark - Image Generation -
-+ (UIImage *)verticalCapsuleImageWithWidth:(CGFloat)width
-{
-    UIImage *image = nil;
-    CGFloat radius = width * 0.5f;
-    CGRect frame = (CGRect){0, 0, width+1, width+1};
-
-    UIGraphicsBeginImageContextWithOptions(frame.size, NO, 0.0f);
-    [[UIBezierPath bezierPathWithRoundedRect:frame cornerRadius:radius] fill];
-    image = UIGraphicsGetImageFromCurrentImageContext();
-    UIGraphicsEndImageContext();
-
-    image = [image resizableImageWithCapInsets:UIEdgeInsetsMake(radius, radius, radius, radius) resizingMode:UIImageResizingModeStretch];
-    image = [image imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
-
-    return image;
 }
 
 @end
