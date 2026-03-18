@@ -1,7 +1,7 @@
 //
 //  TOScrollBar.m
 //
-//  Copyright 2016-2017 Timothy Oliver. All rights reserved.
+//  Copyright 2016-2026 Timothy Oliver. All rights reserved.
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
 //  of this software and associated documentation files (the "Software"), to
@@ -84,16 +84,6 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
 
 #pragma mark - Class Creation -
 
-- (instancetype)initWithStyle:(TOScrollBarStyle)style
-{
-    if (self = [super initWithFrame:CGRectZero]) {
-        _style = style;
-        [self setUpInitialProperties];
-    }
-
-    return self;
-}
-
 - (instancetype)initWithFrame:(CGRect)frame
 {
     if (self = [super initWithFrame:frame]) {
@@ -143,21 +133,10 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     [self addSubview:self.handleView];
 
     // Add the initial styling
-    [self configureViewsForStyle:self.style];
-    
+    self.trackView.tintColor = [UIColor systemFillColor];
+
     // Add gesture recognizer
     [self addGestureRecognizer:self.gestureRecognizer];
-}
-
-- (void)configureViewsForStyle:(TOScrollBarStyle)style
-{
-    BOOL dark = (style == TOScrollBarStyleDark);
-
-    CGFloat whiteColor = 0.0f;
-    if (dark) {
-        whiteColor = 1.0f;
-    }
-    self.trackView.tintColor = [UIColor colorWithWhite:whiteColor alpha:0.1f];
 }
 
 - (void)dealloc
@@ -234,13 +213,9 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
 - (void)layoutInScrollView
 {
     CGRect scrollViewFrame = _scrollView.frame;
-    UIEdgeInsets insets    = _scrollView.contentInset;
+    UIEdgeInsets insets    = _scrollView.adjustedContentInset;
     CGPoint contentOffset  = _scrollView.contentOffset;
     CGFloat halfWidth      = (kTOScrollBarWidth * 0.5f);
-
-    if (@available(iOS 11.0, *)) {
-        insets = _scrollView.adjustedContentInset;
-    }
 
     // Contract the usable space by the scroll view's content inset (eg navigation/tool bars)
     scrollViewFrame.size.height -= (insets.top + insets.bottom);
@@ -267,7 +242,7 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     
     // Horizontal placement
     frame.origin.x = scrollViewFrame.size.width - (_edgeInset + halfWidth);
-    if (@available(iOS 11.0, *)) { frame.origin.x -= _scrollView.safeAreaInsets.right; }
+    frame.origin.x -= _scrollView.safeAreaInsets.right;
     frame.origin.x = MIN(frame.origin.x, scrollViewFrame.size.width - kTOScrollBarWidth);
 
     // Vertical placement in scroll view
@@ -311,10 +286,7 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     handleFrame.origin.x = ceilf(((frame.size.width - _handleWidth) * 0.5f) + _horizontalOffset);
 
     // Work out the y offset of the handle
-    UIEdgeInsets contentInset = _scrollView.contentInset;
-    if (@available(iOS 11.0, *)) {
-        contentInset = _scrollView.safeAreaInsets;
-    }
+    UIEdgeInsets contentInset = _scrollView.safeAreaInsets;
 
     CGPoint contentOffset     = _scrollView.contentOffset;
     CGSize contentSize        = _scrollView.contentSize;
@@ -353,12 +325,9 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     CGFloat positionRatio = yOffset / heightRange;
 
     CGRect frame       = _scrollView.frame;
-    UIEdgeInsets inset = _scrollView.contentInset;
+    UIEdgeInsets inset = _scrollView.adjustedContentInset;
     CGSize contentSize = _scrollView.contentSize;
 
-    if (@available(iOS 11.0, *)) {
-        inset = _scrollView.adjustedContentInset;
-    }
     inset.top = _originalTopInset;
 
     CGFloat totalScrollSize = (contentSize.height + inset.top + inset.bottom) - frame.size.height;
@@ -369,14 +338,9 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     contentOffset.y = scrollOffset;
 
     // Animate to help coax the large title navigation bar to behave
-    if (@available(iOS 11.0, *)) {
-        [UIView animateWithDuration:animated ? 0.1f : 0.00001f animations:^{
-            [self.scrollView setContentOffset:contentOffset animated:NO];
-        }];
-    }
-    else {
+    [UIView animateWithDuration:animated ? 0.1f : 0.00001f animations:^{
         [self.scrollView setContentOffset:contentOffset animated:NO];
-    }
+    }];
 }
 
 #pragma mark - Scroll View Integration -
@@ -464,11 +428,7 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     self.originalHeight = self.frame.size.height;
     self.originalYOffset = self.frame.origin.y - self.scrollView.contentOffset.y;
 
-    if (@available(iOS 11.0, *)) {
-        self.originalTopInset = _scrollView.adjustedContentInset.top;
-    } else {
-        self.originalTopInset = _scrollView.contentInset.top;
-    }
+    self.originalTopInset = _scrollView.adjustedContentInset.top;
 
     // Check if the user tapped inside the handle
     CGRect handleFrame = self.handleView.frame;
@@ -597,12 +557,6 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
 }
 
 #pragma mark - Accessors -
-- (void)setStyle:(TOScrollBarStyle)style
-{
-    _style = style;
-    [self configureViewsForStyle:style];
-}
-
 - (UIColor *)trackTintColor { return self.trackView.tintColor; }
 
 - (void)setTrackTintColor:(UIColor *)trackTintColor

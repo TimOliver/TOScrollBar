@@ -1,7 +1,7 @@
 //
 //  TOScrollBar.h
 //
-//  Copyright 2016-2017 Timothy Oliver. All rights reserved.
+//  Copyright 2016-2026 Timothy Oliver. All rights reserved.
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
 //  of this software and associated documentation files (the "Software"), to
@@ -23,17 +23,9 @@
 #import <UIKit/UIKit.h>
 #import "UIScrollView+TOScrollBar.h"
 
-typedef NS_ENUM(NSInteger, TOScrollBarStyle) {
-    TOScrollBarStyleDefault,
-    TOScrollBarStyleDark
-};
-
 NS_ASSUME_NONNULL_BEGIN
 
 @interface TOScrollBar : UIView
-
-/* The visual style of the scroll bar, either light or dark */
-@property (nonatomic, assign) TOScrollBarStyle style;
 
 /** Aligns the scroll bar to the top of the scroll view content offset.
      Set this to `YES` when using this in a view controller with iOS 11 large titles. */
@@ -73,13 +65,6 @@ NS_ASSUME_NONNULL_BEGIN
  Touches to the track will be passed to the UI controls beneath it.
  Default is NO. */
 @property (nonatomic, assign) BOOL handleExclusiveInteractionEnabled;
-
-/** 
- Creates a new instance of the scroll bar view 
- 
- @param style The initial style of the scroll bar upon creation
- */
-- (instancetype)initWithStyle:(TOScrollBarStyle)style;
 
 /**
  Adds the scroll bar to a scroll view
