@@ -58,8 +58,8 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
 
 @property (nonatomic, assign) BOOL userHidden;          // View was explicitly hidden by the user as opposed to us
 
-@property (nonatomic, strong) UIImageView *trackView;   // The track indicating the scrollable distance
-@property (nonatomic, strong) UIImageView *handleView;  // The handle that may be dragged in the scroll bar
+@property (nonatomic, strong) UIView *trackView;   // The track indicating the scrollable distance
+@property (nonatomic, strong) UIView *handleView;  // The handle that may be dragged in the scroll bar
 
 @property (nonatomic, assign, readwrite) BOOL dragging; // The user is presently dragging the handle
 @property (nonatomic, assign) CGFloat yOffset;          // The offset from the center of the thumb
@@ -81,6 +81,8 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
 /************************************************************************/
 
 @implementation TOScrollBar
+
+@synthesize handleTintColor = _handleTintColor;
 
 #pragma mark - Class Creation -
 
@@ -125,15 +127,16 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     self.backgroundColor = [UIColor clearColor];
 
     // Create and add the track view
-    self.trackView = [[UIImageView alloc] initWithImage:[TOScrollBar verticalCapsuleImageWithWidth:self.trackWidth]];
+    self.trackView = [[UIView alloc] initWithFrame:CGRectZero];
+    self.trackView.backgroundColor = [UIColor systemFillColor];
+    self.trackView.layer.cornerRadius = self.trackWidth * 0.5f;
     [self addSubview:self.trackView];
 
     // Add the handle view
-    self.handleView = [[UIImageView alloc] initWithImage:[TOScrollBar verticalCapsuleImageWithWidth:self.handleWidth]];
+    self.handleView = [[UIView alloc] initWithFrame:CGRectZero];
+    self.handleView.backgroundColor = self.tintColor;
+    self.handleView.layer.cornerRadius = self.handleWidth * 0.5f;
     [self addSubview:self.handleView];
-
-    // Add the initial styling
-    self.trackView.tintColor = [UIColor systemFillColor];
 
     // Add gesture recognizer
     [self addGestureRecognizer:self.gestureRecognizer];
@@ -177,6 +180,14 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
 {
     [super willMoveToSuperview:newSuperview];
     [self setUpViews];
+}
+
+- (void)tintColorDidChange
+{
+    [super tintColorDidChange];
+    if (_handleTintColor == nil) {
+        self.handleView.backgroundColor = self.tintColor;
+    }
 }
 
 #pragma mark - Content Layout -
@@ -273,6 +284,7 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     trackFrame.size.height = frame.size.height;
     trackFrame.origin.x = ceilf(((frame.size.width - _trackWidth) * 0.5f) + _horizontalOffset);
     self.trackView.frame = CGRectIntegral(trackFrame);
+    self.trackView.layer.cornerRadius = _trackWidth * 0.5f;
 
     // Don't handle automatic layout when dragging; we'll do that manually elsewhere
     if (self.dragging || self.disabled) {
@@ -314,6 +326,7 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     handleFrame.origin.y = MIN(handleFrame.origin.y, (frame.size.height - handleFrame.size.height));
 
     self.handleView.frame = handleFrame;
+    self.handleView.layer.cornerRadius = _handleWidth * 0.5f;
 }
 
 - (void)setScrollYOffsetForHandleYOffset:(CGFloat)yOffset animated:(BOOL)animated
@@ -557,18 +570,19 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
 }
 
 #pragma mark - Accessors -
-- (UIColor *)trackTintColor { return self.trackView.tintColor; }
+- (UIColor *)trackTintColor { return self.trackView.backgroundColor; }
 
 - (void)setTrackTintColor:(UIColor *)trackTintColor
 {
-    self.trackView.tintColor = trackTintColor;
+    self.trackView.backgroundColor = trackTintColor;
 }
 
-- (UIColor *)handleTintColor { return self.handleView.tintColor; }
+- (UIColor *)handleTintColor { return self.handleView.backgroundColor; }
 
 - (void)setHandleTintColor:(UIColor *)handleTintColor
 {
-    self.handleView.tintColor = handleTintColor;
+    _handleTintColor = handleTintColor;
+    self.handleView.backgroundColor = handleTintColor ?: self.tintColor;
 }
 
 - (void)setHidden:(BOOL)hidden
@@ -622,24 +636,6 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
                          super.hidden = hidden;
                      }];
 
-}
-
-#pragma mark - Image Generation -
-+ (UIImage *)verticalCapsuleImageWithWidth:(CGFloat)width
-{
-    UIImage *image = nil;
-    CGFloat radius = width * 0.5f;
-    CGRect frame = (CGRect){0, 0, width+1, width+1};
-
-    UIGraphicsBeginImageContextWithOptions(frame.size, NO, 0.0f);
-    [[UIBezierPath bezierPathWithRoundedRect:frame cornerRadius:radius] fill];
-    image = UIGraphicsGetImageFromCurrentImageContext();
-    UIGraphicsEndImageContext();
-
-    image = [image resizableImageWithCapInsets:UIEdgeInsetsMake(radius, radius, radius, radius) resizingMode:UIImageResizingModeStretch];
-    image = [image imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
-
-    return image;
 }
 
 @end
