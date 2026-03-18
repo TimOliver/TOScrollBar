@@ -41,7 +41,8 @@
     self.navigationItem.leftBarButtonItem = hideItem;
 
     self.navigationController.navigationBar.prefersLargeTitles = YES;
-    scrollBar.insetForLargeTitles = YES;
+    if (@available(iOS 26.0, *)) {}
+    else { scrollBar.insetForLargeTitles = YES; }
 
     UISearchController *searchController = [[UISearchController alloc] initWithSearchResultsController:nil];
     searchController.searchResultsUpdater = self;
