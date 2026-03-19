@@ -23,6 +23,7 @@
 #import "TOScrollBar.h"
 #import "UIScrollView+TOScrollBar.h"
 #import "TOScrollBarGestureRecognizer.h"
+#import <objc/message.h>
 
 /** Default values for the scroll bar */
 static const CGFloat kTOScrollBarTrackWidth      = 2.0f;     // The default width of the scrollable space indicator
@@ -331,7 +332,7 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     self.handleView.layer.cornerRadius = _handleWidth * 0.5f;
 }
 
-- (void)setScrollYOffsetForHandleYOffset:(CGFloat)yOffset animated:(BOOL)animated
+- (void)setScrollYOffsetForHandleYOffset:(CGFloat)yOffset
 {
     CGFloat heightRange = _trackView.frame.size.height - _handleView.frame.size.height;
     yOffset = MAX(0.0f, yOffset);
@@ -345,16 +346,10 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     inset.top = [self _navigationBarLargeTitleMaxY];
 
     CGFloat totalScrollSize = (contentSize.height + inset.top + inset.bottom) - frame.size.height;
-    CGFloat scrollOffset = totalScrollSize * positionRatio;
-    scrollOffset -= inset.top;
-
+    CGFloat scrollOffset = -inset.top + floorf(totalScrollSize * positionRatio);
     CGPoint contentOffset = _scrollView.contentOffset;
-    contentOffset.y = scrollOffset;
-
-    // Animate to help coax the large title navigation bar to behave
-    [UIView animateWithDuration:animated ? 0.1f : 0.00001f animations:^{
-        [self.scrollView setContentOffset:contentOffset animated:NO];
-    }];
+    contentOffset.y = MAX(scrollOffset, -inset.top);
+    [self.scrollView setContentOffset:contentOffset animated:NO];
 }
 
 #pragma mark - Scroll View Integration -
@@ -470,7 +465,7 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
 							 self.handleView.frame = CGRectIntegral(handleFrame);
 						 } completion:nil];
 
-		[self setScrollYOffsetForHandleYOffset:floorf(destinationYOffset) animated:NO];
+		[self setScrollYOffsetForHandleYOffset:floorf(destinationYOffset)];
 	}
 }
 
@@ -526,7 +521,7 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
 
     // If the user is doing really granualar swipes, add a subtle amount
     // of vertical animation so the scroll view isn't jumping on each frame
-    [self setScrollYOffsetForHandleYOffset:floorf(handleFrame.origin.y) animated:NO]; //(delta < 0.51f)
+    [self setScrollYOffsetForHandleYOffset:floorf(handleFrame.origin.y)];
 }
 
 - (void)gestureEnded
