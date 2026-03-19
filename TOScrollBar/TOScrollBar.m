@@ -349,6 +349,10 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     CGFloat scrollOffset = -inset.top + floorf(totalScrollSize * positionRatio);
     CGPoint contentOffset = _scrollView.contentOffset;
     contentOffset.y = MAX(scrollOffset, -inset.top);
+
+    // We have to call it twice because if the offset lands halfway on the large title, some animation glitching occurs.
+    // Setting the content offset a second time after the first seems to commit the offset we want for good.
+    [self.scrollView setContentOffset:contentOffset animated:NO];
     [self.scrollView setContentOffset:contentOffset animated:NO];
 }
 
