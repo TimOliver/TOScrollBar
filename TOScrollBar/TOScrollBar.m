@@ -231,13 +231,8 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     // Contract the usable space by the scroll view's content inset (eg navigation/tool bars)
     scrollViewFrame.size.height -= (insets.top + insets.bottom);
 
-    CGFloat largeTitleDelta = 0.0f;
-    if (_insetForLargeTitles) {
-        largeTitleDelta = fabs(MIN(insets.top + contentOffset.y, 0.0f));
-    }
-
     // Work out the final height be further contracting by the padding
-    CGFloat height = (scrollViewFrame.size.height - (_verticalInset.top + _verticalInset.bottom)) - largeTitleDelta;
+    CGFloat height = (scrollViewFrame.size.height - (_verticalInset.top + _verticalInset.bottom));
 
     // Work out how much we have to offset the track by to make sure all of the parent view
     // is visible at the edge of the screen (Or else we'll be unable to tap properly)
@@ -263,7 +258,6 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     else {
         frame.origin.y = _verticalInset.top;
         frame.origin.y += insets.top;
-        frame.origin.y += largeTitleDelta;
     }
     frame.origin.y += contentOffset.y;
 
