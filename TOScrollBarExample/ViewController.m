@@ -19,6 +19,13 @@
 
 @implementation ViewController
 
+- (instancetype)init {
+    if (self = [super initWithStyle:UITableViewStyleInsetGrouped]) {
+        self.title = @"TOScrollBar";
+    }
+    return self;
+}
+
 - (void)viewDidLoad {
     [super viewDidLoad];
 
@@ -41,7 +48,6 @@
     self.navigationItem.leftBarButtonItem = hideItem;
 
     self.navigationController.navigationBar.prefersLargeTitles = YES;
-    scrollBar.insetForLargeTitles = YES;
 
     UISearchController *searchController = [[UISearchController alloc] initWithSearchResultsController:nil];
     searchController.searchResultsUpdater = self;
@@ -63,7 +69,6 @@
     }
 
     cell.textLabel.text = [NSString stringWithFormat:@"Cell %ld", indexPath.row+1];
-    cell.layoutMargins = [tableView.to_scrollBar adjustedTableViewCellLayoutMarginsForMargins:cell.layoutMargins manualOffset:0.0f];
 
     return cell;
 }

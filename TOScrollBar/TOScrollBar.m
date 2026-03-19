@@ -23,6 +23,7 @@
 #import "TOScrollBar.h"
 #import "UIScrollView+TOScrollBar.h"
 #import "TOScrollBarGestureRecognizer.h"
+#import <objc/message.h>
 
 /** Default values for the scroll bar */
 static const CGFloat kTOScrollBarTrackWidth      = 2.0f;     // The default width of the scrollable space indicator
@@ -55,18 +56,18 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
 }
 
 @property (nonatomic, weak, readwrite) UIScrollView *scrollView;   // The parent scroll view in which we belong
+@property (nonatomic, weak) UINavigationBar *navigationBar;        // The navigation bar driving this scroll view, if any
 
 @property (nonatomic, assign) BOOL userHidden;          // View was explicitly hidden by the user as opposed to us
 
-@property (nonatomic, strong) UIImageView *trackView;   // The track indicating the scrollable distance
-@property (nonatomic, strong) UIImageView *handleView;  // The handle that may be dragged in the scroll bar
+@property (nonatomic, strong) UIView *trackView;   // The track indicating the scrollable distance
+@property (nonatomic, strong) UIView *handleView;  // The handle that may be dragged in the scroll bar
 
 @property (nonatomic, assign, readwrite) BOOL dragging; // The user is presently dragging the handle
 @property (nonatomic, assign) CGFloat yOffset;          // The offset from the center of the thumb
 
 @property (nonatomic, assign) CGFloat originalYOffset;  // The original placement of the scroll bar when the user started dragging
 @property (nonatomic, assign) CGFloat originalHeight;   // The original height of the scroll bar when the user started dragging
-@property (nonatomic, assign) CGFloat originalTopInset; // The original safe area inset of the scroll bar when the user started dragging
 
 @property (nonatomic, assign) CGFloat horizontalOffset; // The horizontal offset when the edge inset is too small for the touch region
 
@@ -81,6 +82,8 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
 /************************************************************************/
 
 @implementation TOScrollBar
+
+@synthesize handleTintColor = _handleTintColor;
 
 #pragma mark - Class Creation -
 
@@ -125,15 +128,20 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     self.backgroundColor = [UIColor clearColor];
 
     // Create and add the track view
-    self.trackView = [[UIImageView alloc] initWithImage:[TOScrollBar verticalCapsuleImageWithWidth:self.trackWidth]];
+    self.trackView = [[UIView alloc] initWithFrame:CGRectZero];
+    self.trackView.backgroundColor = [UIColor systemFillColor];
+    self.trackView.layer.cornerRadius = self.trackWidth * 0.5f;
     [self addSubview:self.trackView];
 
     // Add the handle view
-    self.handleView = [[UIImageView alloc] initWithImage:[TOScrollBar verticalCapsuleImageWithWidth:self.handleWidth]];
+    self.handleView = [[UIView alloc] initWithFrame:CGRectZero];
+    if (@available(iOS 26.0, *)) {
+        self.handleView.backgroundColor = [UIColor labelColor];
+    } else {
+        self.handleView.backgroundColor = self.tintColor;
+    }
+    self.handleView.layer.cornerRadius = self.handleWidth * 0.5f;
     [self addSubview:self.handleView];
-
-    // Add the initial styling
-    self.trackView.tintColor = [UIColor systemFillColor];
 
     // Add gesture recognizer
     [self addGestureRecognizer:self.gestureRecognizer];
@@ -179,6 +187,20 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     [self setUpViews];
 }
 
+- (void)didMoveToWindow {
+    [super didMoveToWindow];
+    _navigationBar = [self _captureNavigationBarIfAvailable];
+}
+
+- (void)tintColorDidChange
+{
+    [super tintColorDidChange];
+    if (_handleTintColor == nil) {
+        if (@available(iOS 26.0, *)) { return; }
+        self.handleView.backgroundColor = self.tintColor;
+    }
+}
+
 #pragma mark - Content Layout -
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object
@@ -196,9 +218,9 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
         return _handleMinimiumHeight;
     }
 
-    CGFloat heightRatio = self.scrollView.frame.size.height / self.scrollView.contentSize.height;
+    CGFloat totalHeight = self.scrollView.contentSize.height + [self _navigationBarLargeTitleMaxY];
+    CGFloat heightRatio = self.scrollView.frame.size.height / totalHeight;
     CGFloat height = self.frame.size.height * heightRatio;
-
     return MAX(floorf(height), _handleMinimiumHeight);
 }
 
@@ -210,8 +232,7 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     [self setHidden:(self.disabled || self.userHidden) animated:NO];
 }
 
-- (void)layoutInScrollView
-{
+- (void)layoutInScrollView {
     CGRect scrollViewFrame = _scrollView.frame;
     UIEdgeInsets insets    = _scrollView.adjustedContentInset;
     CGPoint contentOffset  = _scrollView.contentOffset;
@@ -220,13 +241,8 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     // Contract the usable space by the scroll view's content inset (eg navigation/tool bars)
     scrollViewFrame.size.height -= (insets.top + insets.bottom);
 
-    CGFloat largeTitleDelta = 0.0f;
-    if (_insetForLargeTitles) {
-        largeTitleDelta = fabs(MIN(insets.top + contentOffset.y, 0.0f));
-    }
-
     // Work out the final height be further contracting by the padding
-    CGFloat height = (scrollViewFrame.size.height - (_verticalInset.top + _verticalInset.bottom)) - largeTitleDelta;
+    CGFloat height = (scrollViewFrame.size.height - (_verticalInset.top + _verticalInset.bottom));
 
     // Work out how much we have to offset the track by to make sure all of the parent view
     // is visible at the edge of the screen (Or else we'll be unable to tap properly)
@@ -252,7 +268,6 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     else {
         frame.origin.y = _verticalInset.top;
         frame.origin.y += insets.top;
-        frame.origin.y += largeTitleDelta;
     }
     frame.origin.y += contentOffset.y;
 
@@ -273,6 +288,7 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     trackFrame.size.height = frame.size.height;
     trackFrame.origin.x = ceilf(((frame.size.width - _trackWidth) * 0.5f) + _horizontalOffset);
     self.trackView.frame = CGRectIntegral(trackFrame);
+    self.trackView.layer.cornerRadius = _trackWidth * 0.5f;
 
     // Don't handle automatic layout when dragging; we'll do that manually elsewhere
     if (self.dragging || self.disabled) {
@@ -287,18 +303,18 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
 
     // Work out the y offset of the handle
     UIEdgeInsets contentInset = _scrollView.safeAreaInsets;
-
     CGPoint contentOffset     = _scrollView.contentOffset;
     CGSize contentSize        = _scrollView.contentSize;
     CGRect scrollViewFrame    = _scrollView.frame;
+    CGFloat topInset          = [self _navigationBarLargeTitleMaxY];
 
-    CGFloat scrollableHeight = (contentSize.height + contentInset.top + contentInset.bottom) - scrollViewFrame.size.height;
-    CGFloat scrollProgress = (contentOffset.y + contentInset.top) / scrollableHeight;
+    CGFloat scrollableHeight = (contentSize.height + topInset + contentInset.bottom) - scrollViewFrame.size.height;
+    CGFloat scrollProgress = (contentOffset.y + topInset) / scrollableHeight;
     handleFrame.origin.y = (frame.size.height - handleFrame.size.height) * scrollProgress;
 
     // If the scroll view expanded beyond its scrollable range, shrink the handle to match the rubber band effect
-    if (contentOffset.y < -contentInset.top) { // The top
-        handleFrame.size.height -= (-contentOffset.y - contentInset.top);
+    if (contentOffset.y < -topInset) { // The top
+        handleFrame.size.height -= (-contentOffset.y - topInset);
         handleFrame.size.height = MAX(handleFrame.size.height, (_trackWidth * 2 + 2));
     }
     else if (contentOffset.y + scrollViewFrame.size.height > contentSize.height + contentInset.bottom) { // The bottom
@@ -313,10 +329,11 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     handleFrame.origin.y = MAX(handleFrame.origin.y, 0.0f);
     handleFrame.origin.y = MIN(handleFrame.origin.y, (frame.size.height - handleFrame.size.height));
 
-    self.handleView.frame = handleFrame;
+    self.handleView.frame = CGRectIntegral(handleFrame);
+    self.handleView.layer.cornerRadius = _handleWidth * 0.5f;
 }
 
-- (void)setScrollYOffsetForHandleYOffset:(CGFloat)yOffset animated:(BOOL)animated
+- (void)setScrollYOffsetForHandleYOffset:(CGFloat)yOffset
 {
     CGFloat heightRange = _trackView.frame.size.height - _handleView.frame.size.height;
     yOffset = MAX(0.0f, yOffset);
@@ -325,22 +342,19 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     CGFloat positionRatio = yOffset / heightRange;
 
     CGRect frame       = _scrollView.frame;
-    UIEdgeInsets inset = _scrollView.adjustedContentInset;
     CGSize contentSize = _scrollView.contentSize;
-
-    inset.top = _originalTopInset;
+    UIEdgeInsets inset = _scrollView.adjustedContentInset;
+    inset.top = [self _navigationBarLargeTitleMaxY];
 
     CGFloat totalScrollSize = (contentSize.height + inset.top + inset.bottom) - frame.size.height;
-    CGFloat scrollOffset = totalScrollSize * positionRatio;
-    scrollOffset -= inset.top;
-
+    CGFloat scrollOffset = -inset.top + floorf(totalScrollSize * positionRatio);
     CGPoint contentOffset = _scrollView.contentOffset;
-    contentOffset.y = scrollOffset;
+    contentOffset.y = MAX(scrollOffset, -inset.top);
 
-    // Animate to help coax the large title navigation bar to behave
-    [UIView animateWithDuration:animated ? 0.1f : 0.00001f animations:^{
-        [self.scrollView setContentOffset:contentOffset animated:NO];
-    }];
+    // We have to call it twice because if the offset lands halfway on the large title, some animation glitching occurs.
+    // Setting the content offset a second time after the first seems to commit the offset we want for good.
+    [self.scrollView setContentOffset:contentOffset animated:NO];
+    [self.scrollView setContentOffset:contentOffset animated:NO];
 }
 
 #pragma mark - Scroll View Integration -
@@ -428,8 +442,6 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     self.originalHeight = self.frame.size.height;
     self.originalYOffset = self.frame.origin.y - self.scrollView.contentOffset.y;
 
-    self.originalTopInset = _scrollView.adjustedContentInset.top;
-
     // Check if the user tapped inside the handle
     CGRect handleFrame = self.handleView.frame;
     if (touchPoint.y > (handleFrame.origin.y - 20) &&
@@ -455,10 +467,10 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
 			 usingSpringWithDamping:1.0f
 			  initialSpringVelocity:0.1f options:UIViewAnimationOptionBeginFromCurrentState
 						 animations:^{
-							 self.handleView.frame = handleFrame;
+							 self.handleView.frame = CGRectIntegral(handleFrame);
 						 } completion:nil];
 
-		[self setScrollYOffsetForHandleYOffset:floorf(destinationYOffset) animated:NO];
+		[self setScrollYOffsetForHandleYOffset:floorf(destinationYOffset)];
 	}
 }
 
@@ -500,7 +512,7 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
         handleFrame.origin.y = MIN(handleFrame.origin.y, maximumY);
     }
 
-    _handleView.frame = handleFrame;
+    _handleView.frame = CGRectIntegral(handleFrame);
 
     delta -= handleFrame.origin.y;
     delta = fabs(delta);
@@ -514,7 +526,7 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
 
     // If the user is doing really granualar swipes, add a subtle amount
     // of vertical animation so the scroll view isn't jumping on each frame
-    [self setScrollYOffsetForHandleYOffset:floorf(handleFrame.origin.y) animated:NO]; //(delta < 0.51f)
+    [self setScrollYOffsetForHandleYOffset:floorf(handleFrame.origin.y)];
 }
 
 - (void)gestureEnded
@@ -557,18 +569,19 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
 }
 
 #pragma mark - Accessors -
-- (UIColor *)trackTintColor { return self.trackView.tintColor; }
+- (UIColor *)trackTintColor { return self.trackView.backgroundColor; }
 
 - (void)setTrackTintColor:(UIColor *)trackTintColor
 {
-    self.trackView.tintColor = trackTintColor;
+    self.trackView.backgroundColor = trackTintColor;
 }
 
-- (UIColor *)handleTintColor { return self.handleView.tintColor; }
+- (UIColor *)handleTintColor { return self.handleView.backgroundColor; }
 
 - (void)setHandleTintColor:(UIColor *)handleTintColor
 {
-    self.handleView.tintColor = handleTintColor;
+    _handleTintColor = handleTintColor;
+    self.handleView.backgroundColor = handleTintColor ?: self.tintColor;
 }
 
 - (void)setHidden:(BOOL)hidden
@@ -624,22 +637,31 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
 
 }
 
-#pragma mark - Image Generation -
-+ (UIImage *)verticalCapsuleImageWithWidth:(CGFloat)width
-{
-    UIImage *image = nil;
-    CGFloat radius = width * 0.5f;
-    CGRect frame = (CGRect){0, 0, width+1, width+1};
+#pragma mark - Navigation Bar Handling
 
-    UIGraphicsBeginImageContextWithOptions(frame.size, NO, 0.0f);
-    [[UIBezierPath bezierPathWithRoundedRect:frame cornerRadius:radius] fill];
-    image = UIGraphicsGetImageFromCurrentImageContext();
-    UIGraphicsEndImageContext();
+- (UINavigationBar *)_captureNavigationBarIfAvailable {
+    // Go up the view hierarchy until we find a hosting view containing a navigation bar
+    Class navigationBarClass = [UINavigationBar class];
+    NSString *const containerViewName = @"LayoutContainerView";
+    UIView *superview = self;
+    while ((superview = superview.superview) != nil) {
+        if (![NSStringFromClass(superview.class) hasSuffix:containerViewName]) { continue; }
+        for (UIView *subview in superview.subviews) {
+            if ([subview isKindOfClass:navigationBarClass]) {
+                return (UINavigationBar *)subview;
+            }
+        }
+    }
+    return nil;
+}
 
-    image = [image resizableImageWithCapInsets:UIEdgeInsetsMake(radius, radius, radius, radius) resizingMode:UIImageResizingModeStretch];
-    image = [image imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
-
-    return image;
+- (CGFloat)_navigationBarLargeTitleMaxY {
+    // Through some trial and error, we learned that you can call 'sizeThatFits'
+    // on a UINavigationBar and it will return its largest possible size, including large titles.
+    if (!_navigationBar) { return self.scrollView.safeAreaInsets.top; }
+    const CGSize maxSize = self.scrollView.frame.size;
+    const CGSize navbarSize = [_navigationBar sizeThatFits:maxSize];
+    return CGRectGetMinY(_navigationBar.frame) + navbarSize.height;
 }
 
 @end
