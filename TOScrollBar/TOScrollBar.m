@@ -196,6 +196,7 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
 {
     [super tintColorDidChange];
     if (_handleTintColor == nil) {
+        if (@available(iOS 26.0, *)) { return; }
         self.handleView.backgroundColor = self.tintColor;
     }
 }
