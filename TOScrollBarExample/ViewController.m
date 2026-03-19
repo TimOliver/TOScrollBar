@@ -19,6 +19,13 @@
 
 @implementation ViewController
 
+- (instancetype)init {
+    if (self = [super init]) {
+        self.title = @"TOScrollBar";
+    }
+    return self;
+}
+
 - (void)viewDidLoad {
     [super viewDidLoad];
 
@@ -41,8 +48,6 @@
     self.navigationItem.leftBarButtonItem = hideItem;
 
     self.navigationController.navigationBar.prefersLargeTitles = YES;
-    if (@available(iOS 26.0, *)) {}
-    else { scrollBar.insetForLargeTitles = YES; }
 
     UISearchController *searchController = [[UISearchController alloc] initWithSearchResultsController:nil];
     searchController.searchResultsUpdater = self;
