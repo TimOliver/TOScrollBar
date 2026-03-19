@@ -69,7 +69,6 @@
     }
 
     cell.textLabel.text = [NSString stringWithFormat:@"Cell %ld", indexPath.row+1];
-    cell.layoutMargins = [tableView.to_scrollBar adjustedTableViewCellLayoutMarginsForMargins:cell.layoutMargins manualOffset:0.0f];
 
     return cell;
 }
