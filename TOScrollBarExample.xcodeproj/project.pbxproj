@@ -16,7 +16,7 @@
 		225FD7941DDAF85C008CF7E4 /* TOScrollBarExampleTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 225FD7931DDAF85C008CF7E4 /* TOScrollBarExampleTests.m */; };
 		22B460601FDBE5EF00386CED /* TOScrollBarGestureRecognizer.m in Sources */ = {isa = PBXBuildFile; fileRef = 22B4605F1FDBE5EF00386CED /* TOScrollBarGestureRecognizer.m */; };
 		22CCCCD11DD064B90092A89D /* UIScrollView+TOScrollBar.m in Sources */ = {isa = PBXBuildFile; fileRef = 22CCCCD01DD064B90092A89D /* UIScrollView+TOScrollBar.m */; };
-		22EE55012F6DB64B0077991F /* TOScrollBarDecelerationAnimator.m in Sources */ = {isa = PBXBuildFile; fileRef = 22EE55002F6DB64B0077991F /* TOScrollBarDecelerationAnimator.m */; };
+		22EE55042F6DB8050077991F /* TOScrollBarDecelerationCoordinator.m in Sources */ = {isa = PBXBuildFile; fileRef = 22EE55032F6DB8050077991F /* TOScrollBarDecelerationCoordinator.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -48,8 +48,8 @@
 		22B4605F1FDBE5EF00386CED /* TOScrollBarGestureRecognizer.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TOScrollBarGestureRecognizer.m; sourceTree = "<group>"; };
 		22CCCCCF1DD064B90092A89D /* UIScrollView+TOScrollBar.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIScrollView+TOScrollBar.h"; sourceTree = "<group>"; };
 		22CCCCD01DD064B90092A89D /* UIScrollView+TOScrollBar.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIScrollView+TOScrollBar.m"; sourceTree = "<group>"; };
-		22EE54FF2F6DB64B0077991F /* TOScrollBarDecelerationAnimator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TOScrollBarDecelerationAnimator.h; sourceTree = "<group>"; };
-		22EE55002F6DB64B0077991F /* TOScrollBarDecelerationAnimator.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TOScrollBarDecelerationAnimator.m; sourceTree = "<group>"; };
+		22EE55022F6DB8050077991F /* TOScrollBarDecelerationCoordinator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TOScrollBarDecelerationCoordinator.h; sourceTree = "<group>"; };
+		22EE55032F6DB8050077991F /* TOScrollBarDecelerationCoordinator.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TOScrollBarDecelerationCoordinator.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -117,12 +117,9 @@
 			children = (
 				223B9BF51DCE496F008601D2 /* TOScrollBar.h */,
 				223B9BF61DCE496F008601D2 /* TOScrollBar.m */,
-				22B4605E1FDBE5EF00386CED /* TOScrollBarGestureRecognizer.h */,
-				22B4605F1FDBE5EF00386CED /* TOScrollBarGestureRecognizer.m */,
 				22CCCCCF1DD064B90092A89D /* UIScrollView+TOScrollBar.h */,
 				22CCCCD01DD064B90092A89D /* UIScrollView+TOScrollBar.m */,
-				22EE54FF2F6DB64B0077991F /* TOScrollBarDecelerationAnimator.h */,
-				22EE55002F6DB64B0077991F /* TOScrollBarDecelerationAnimator.m */,
+				22EE55052F6DB80A0077991F /* Internal */,
 			);
 			path = TOScrollBar;
 			sourceTree = "<group>";
@@ -134,6 +131,17 @@
 				225FD7951DDAF85C008CF7E4 /* Info.plist */,
 			);
 			path = TOScrollBarExampleTests;
+			sourceTree = "<group>";
+		};
+		22EE55052F6DB80A0077991F /* Internal */ = {
+			isa = PBXGroup;
+			children = (
+				22B4605E1FDBE5EF00386CED /* TOScrollBarGestureRecognizer.h */,
+				22B4605F1FDBE5EF00386CED /* TOScrollBarGestureRecognizer.m */,
+				22EE55022F6DB8050077991F /* TOScrollBarDecelerationCoordinator.h */,
+				22EE55032F6DB8050077991F /* TOScrollBarDecelerationCoordinator.m */,
+			);
+			path = Internal;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -243,8 +251,8 @@
 				22B460601FDBE5EF00386CED /* TOScrollBarGestureRecognizer.m in Sources */,
 				222F87BF1DCE453B0068DE2F /* AppDelegate.m in Sources */,
 				222F87BC1DCE453B0068DE2F /* main.m in Sources */,
+				22EE55042F6DB8050077991F /* TOScrollBarDecelerationCoordinator.m in Sources */,
 				223B9BF71DCE496F008601D2 /* TOScrollBar.m in Sources */,
-				22EE55012F6DB64B0077991F /* TOScrollBarDecelerationAnimator.m in Sources */,
 				22CCCCD11DD064B90092A89D /* UIScrollView+TOScrollBar.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

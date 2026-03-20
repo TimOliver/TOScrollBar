@@ -1,5 +1,5 @@
 //
-//  TOScrollBarDecelerationAnimator.h
+//  TOScrollBarDecelerationCoordinator.h
 //
 //  Copyright 2016-2026 Timothy Oliver. All rights reserved.
 //
@@ -25,11 +25,12 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /**
- Drives UIScrollView-style inertial deceleration on a scroll view's content offset.
- Takes a velocity from the scroll bar handle (in handle points/sec), scales it to
- the scroll view's content space, and animates via CADisplayLink with exponential decay.
+ Coordinates velocity tracking during scroll bar handle dragging and drives
+ UIScrollView-style inertial deceleration on release. Tracks touch positions
+ to compute handle velocity, scales it to the scroll view's content space,
+ and animates via CADisplayLink with exponential decay.
  */
-@interface TOScrollBarDecelerationAnimator : NSObject
+@interface TOScrollBarDecelerationCoordinator : NSObject
 
 /** Whether a deceleration animation is currently in progress. */
 @property (nonatomic, readonly) BOOL isDecelerating;
@@ -37,20 +38,25 @@ NS_ASSUME_NONNULL_BEGIN
 /** Called when deceleration finishes (either naturally or via stop). */
 @property (nonatomic, copy, nullable) void (^completionHandler)(void);
 
+/** Resets velocity tracking state. Call when a new drag gesture begins. */
+- (void)beginTracking;
+
+/** Records a touch position for velocity calculation. Call on each gesture move. */
+- (void)trackTouchPoint:(CGFloat)touchY;
+
 /**
- Start a deceleration animation on the given scroll view.
+ Ends tracking and starts deceleration if the handle was flicked.
 
  @param scrollView The scroll view whose contentOffset will be driven.
- @param handleVelocity The velocity of the scroll bar handle in points/sec (handle coordinate space).
  @param trackHeight The total height of the scroll bar track.
  @param handleHeight The height of the scroll bar handle.
+ @return YES if deceleration was started, NO if velocity was too low.
  */
-- (void)startWithScrollView:(UIScrollView *)scrollView
-             handleVelocity:(CGFloat)handleVelocity
-                trackHeight:(CGFloat)trackHeight
-               handleHeight:(CGFloat)handleHeight;
+- (BOOL)endTrackingWithScrollView:(UIScrollView *)scrollView
+                      trackHeight:(CGFloat)trackHeight
+                     handleHeight:(CGFloat)handleHeight;
 
-/** Immediately stops the deceleration animation. */
+/** Immediately stops any in-progress deceleration. */
 - (void)stop;
 
 @end
