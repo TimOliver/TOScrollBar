@@ -557,7 +557,8 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
 
     BOOL decelerating = [_decelerationCoordinator endTrackingWithScrollView:self.scrollView
                                                                trackHeight:_trackView.frame.size.height
-                                                              handleHeight:_handleView.frame.size.height];
+                                                              handleHeight:_handleView.frame.size.height
+                                                                  topInset:[self _navigationBarLargeTitleMaxY]];
     if (!decelerating) {
         self.scrollView.scrollEnabled = YES;
         [UIView animateWithDuration:0.5f delay:0.0f usingSpringWithDamping:1.0f initialSpringVelocity:0.5f options:0 animations:^{

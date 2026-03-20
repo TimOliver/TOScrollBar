@@ -44,6 +44,7 @@ typedef struct TOScrollBarVelocityState TOScrollBarVelocityState;
 @property (nonatomic, assign) CGFloat contentVelocity;     // Scaled velocity in content points/sec
 @property (nonatomic, assign) CFTimeInterval lastTimestamp;
 @property (nonatomic, assign, readwrite) BOOL isDecelerating;
+@property (nonatomic, assign) CGFloat topInset;            // Cached top inset from the scroll bar
 
 @end
 
@@ -80,6 +81,7 @@ typedef struct TOScrollBarVelocityState TOScrollBarVelocityState;
 - (BOOL)endTrackingWithScrollView:(UIScrollView *)scrollView
                       trackHeight:(CGFloat)trackHeight
                      handleHeight:(CGFloat)handleHeight
+                         topInset:(CGFloat)topInset
 {
     // If the finger rested before lifting, zero out the velocity
     CFTimeInterval timeSinceLastTouch = CACurrentMediaTime() - _velocityState.lastTouchTime;
@@ -91,6 +93,7 @@ typedef struct TOScrollBarVelocityState TOScrollBarVelocityState;
         return NO;
     }
 
+    self.topInset = topInset;
     [self startWithScrollView:scrollView
                handleVelocity:_velocityState.velocity
                   trackHeight:trackHeight
@@ -113,8 +116,8 @@ typedef struct TOScrollBarVelocityState TOScrollBarVelocityState;
     CGFloat handleRange = trackHeight - handleHeight;
     if (handleRange < 1.0f) { return; }
 
-    UIEdgeInsets inset = scrollView.adjustedContentInset;
-    CGFloat scrollableHeight = (scrollView.contentSize.height + inset.top + inset.bottom) - scrollView.frame.size.height;
+    CGFloat bottomInset = scrollView.adjustedContentInset.bottom;
+    CGFloat scrollableHeight = (scrollView.contentSize.height + _topInset + bottomInset) - scrollView.frame.size.height;
     if (scrollableHeight < 1.0f) { return; }
 
     CGFloat scale = scrollableHeight / handleRange;
@@ -159,13 +162,12 @@ typedef struct TOScrollBarVelocityState TOScrollBarVelocityState;
     }
 
     // Compute new content offset
-    UIEdgeInsets inset = scrollView.adjustedContentInset;
     CGPoint offset = scrollView.contentOffset;
     offset.y += _contentVelocity * dt;
 
     // Clamp to scrollable bounds
-    CGFloat minY = -inset.top;
-    CGFloat maxY = scrollView.contentSize.height + inset.bottom - scrollView.frame.size.height;
+    CGFloat minY = -_topInset;
+    CGFloat maxY = scrollView.contentSize.height + scrollView.adjustedContentInset.bottom - scrollView.frame.size.height;
     if (offset.y <= minY) {
         offset.y = minY;
         [self stop];

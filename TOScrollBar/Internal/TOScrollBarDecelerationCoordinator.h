@@ -50,11 +50,14 @@ NS_ASSUME_NONNULL_BEGIN
  @param scrollView The scroll view whose contentOffset will be driven.
  @param trackHeight The total height of the scroll bar track.
  @param handleHeight The height of the scroll bar handle.
+ @param topInset The top content inset to use for scrollable range calculation
+                 (e.g. from the navigation bar's full large title height).
  @return YES if deceleration was started, NO if velocity was too low.
  */
 - (BOOL)endTrackingWithScrollView:(UIScrollView *)scrollView
                       trackHeight:(CGFloat)trackHeight
-                     handleHeight:(CGFloat)handleHeight;
+                     handleHeight:(CGFloat)handleHeight
+                         topInset:(CGFloat)topInset;
 
 /** Immediately stops any in-progress deceleration. */
 - (void)stop;
