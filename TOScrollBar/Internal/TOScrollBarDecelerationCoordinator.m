@@ -187,10 +187,6 @@ typedef struct TOScrollBarVelocityState TOScrollBarVelocityState;
     self.displayLink = nil;
     self.contentVelocity = 0;
     self.isDecelerating = NO;
-
-    if (self.completionHandler) {
-        self.completionHandler();
-    }
 }
 
 @end

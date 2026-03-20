@@ -35,9 +35,6 @@ NS_ASSUME_NONNULL_BEGIN
 /** Whether a deceleration animation is currently in progress. */
 @property (nonatomic, readonly) BOOL isDecelerating;
 
-/** Called when deceleration finishes (either naturally or via stop). */
-@property (nonatomic, copy, nullable) void (^completionHandler)(void);
-
 /** Resets velocity tracking state. Call when a new drag gesture begins. */
 - (void)beginTracking;
 

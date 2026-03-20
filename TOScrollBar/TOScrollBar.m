@@ -209,6 +209,7 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object
                         change:(NSDictionary<NSKeyValueChangeKey,id> *)change context:(void *)context
 {
+    [self _cancelDecelerationCoordinatorIfNeeded];
     [self updateStateForScrollView];
     if (self.hidden) { return; }
     [self layoutInScrollView];
@@ -546,27 +547,24 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
         self.decelerationCoordinator = [[TOScrollBarDecelerationCoordinator alloc] init];
     }
 
-    __weak typeof(self) weakSelf = self;
-    _decelerationCoordinator.completionHandler = ^{
-        weakSelf.scrollView.scrollEnabled = YES;
-        [UIView animateWithDuration:0.5f delay:0.0f usingSpringWithDamping:1.0f initialSpringVelocity:0.5f options:0 animations:^{
-            [weakSelf layoutInScrollView];
-            [weakSelf layoutIfNeeded];
-        } completion:nil];
-    };
+    [_decelerationCoordinator endTrackingWithScrollView:self.scrollView
+                                           trackHeight:_trackView.frame.size.height
+                                          handleHeight:_handleView.frame.size.height
+                                              topInset:[self _navigationBarLargeTitleMaxY]];
+    self.scrollView.scrollEnabled = YES;
+    [UIView animateWithDuration:0.5f delay:0.0f usingSpringWithDamping:1.0f initialSpringVelocity:0.5f options:0 animations:^{
+        [self layoutInScrollView];
+        [self layoutIfNeeded];
+    } completion:nil];
+}
 
-    BOOL decelerating = [_decelerationCoordinator endTrackingWithScrollView:self.scrollView
-                                                               trackHeight:_trackView.frame.size.height
-                                                              handleHeight:_handleView.frame.size.height
-                                                                  topInset:[self _navigationBarLargeTitleMaxY]];
-    if (!decelerating) {
-        self.scrollView.scrollEnabled = YES;
-        [UIView animateWithDuration:0.5f delay:0.0f usingSpringWithDamping:1.0f initialSpringVelocity:0.5f options:0 animations:^{
-            [self layoutInScrollView];
-            [self layoutIfNeeded];
-        } completion:nil];
+- (void)_cancelDecelerationCoordinatorIfNeeded {
+    if (_decelerationCoordinator.isDecelerating && (_scrollView.isTracking || _scrollView.isDragging)) {
+        [_decelerationCoordinator stop];
     }
 }
+
+#pragma mark - Hit Testing
 
 - (BOOL)pointInside:(CGPoint)point withEvent:(UIEvent *)event
 {
