@@ -30,10 +30,10 @@ static const CGFloat kMinimumHandleVelocity = 0.1f; // Minimum handle velocity t
 static const CFTimeInterval kStaleThreshold = 0.05;  // If finger rested this long before lifting, no deceleration
 
 // Bounce-back: two-phase overshoot + settle
-static const CGFloat kRubberBandCoefficient = 0.25f;  // Tight overshoot (lower = less travel past boundary)
-static const CGFloat kMaxOvershoot = 120.0f;            // Cap overshoot in points
+static const CGFloat kRubberBandCoefficient = 0.25f;   // Tight overshoot (lower = less travel past boundary)
+static const CGFloat kMaxOvershoot = 120.0f;           // Cap overshoot in points
 static const CFTimeInterval kOvershootDuration = 0.15; // Phase 1: quick deceleration to peak
-static const CFTimeInterval kSettleDuration = 0.55;    // Phase 2: slow ease back to boundary
+static const CFTimeInterval kSettleDuration = 1.2;     // Phase 2: slow ease back to boundary
 
 // Velocity tracking state
 struct TOScrollBarVelocityState {
@@ -190,7 +190,7 @@ typedef struct TOScrollBarBounceState TOScrollBarBounceState;
                 return;
             }
             CGFloat p = settleT / kSettleDuration;
-            CGFloat beta = 5.0;
+            CGFloat beta = 12.0;
             CGFloat eased = (1.0 - exp(-beta * p) * (1.0 + beta * p))
                           / (1.0 - exp(-beta) * (1.0 + beta));
             x = _bounceState.peakOvershoot * (1.0 - eased);
