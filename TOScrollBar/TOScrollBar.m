@@ -586,7 +586,6 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
 
 - (void)setHidden:(BOOL)hidden
 {
-    self.userHidden = hidden;
     [self setHidden:hidden animated:NO];
 }
 
@@ -597,6 +596,8 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
         super.hidden = YES;
         return;
     }
+
+    self.userHidden = hidden;
 
     // Simply show or hide it if we're not animating
     if (animated == NO) {
