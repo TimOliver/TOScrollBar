@@ -23,6 +23,7 @@
 #import "TOScrollBar.h"
 #import "UIScrollView+TOScrollBar.h"
 #import "TOScrollBarGestureRecognizer.h"
+#import "TOScrollBarDecelerationAnimator.h"
 #import <objc/message.h>
 
 /** Default values for the scroll bar */
@@ -42,6 +43,14 @@ struct TOScrollBarScrollViewState {
 };
 typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
 
+// Tracks touch velocity during handle dragging for deceleration on release
+struct TOScrollBarVelocityState {
+    CGFloat lastTouchY;         // Previous touch Y position
+    CFTimeInterval lastTouchTime; // Timestamp of previous touch
+    CGFloat velocity;           // Current handle velocity in points/sec
+};
+typedef struct TOScrollBarVelocityState TOScrollBarVelocityState;
+
 /************************************************************************/
 // Private interface exposure for scroll view category
 
@@ -53,6 +62,7 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
 
 @interface TOScrollBar () <UIGestureRecognizerDelegate> {
     TOScrollBarScrollViewState _scrollViewState;
+    TOScrollBarVelocityState _velocityState;
 }
 
 @property (nonatomic, weak, readwrite) UIScrollView *scrollView;   // The parent scroll view in which we belong
@@ -76,6 +86,8 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
 @property (nonatomic, strong) UIImpactFeedbackGenerator *feedbackGenerator; // Taptic feedback for iPhone 7 and above
 
 @property (nonatomic, strong) TOScrollBarGestureRecognizer *gestureRecognizer; // Our custom recognizer for handling user interactions with the scroll bar
+
+@property (nonatomic, strong) TOScrollBarDecelerationAnimator *decelerationAnimator; // Drives inertial scrolling after release
 
 @end
 
@@ -432,11 +444,15 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
         return;
     }
 
+    // Stop any in-progress deceleration
+    [_decelerationAnimator stop];
+
     // Warm-up the feedback generator
     [_feedbackGenerator prepare];
 
     self.scrollView.scrollEnabled = NO;
     self.dragging = YES;
+    _velocityState = (TOScrollBarVelocityState){0};
 
     // Capture the original position
     self.originalHeight = self.frame.size.height;
@@ -514,6 +530,17 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
 
     _handleView.frame = CGRectIntegral(handleFrame);
 
+    // Track velocity for deceleration on release
+    CFTimeInterval now = CACurrentMediaTime();
+    if (_velocityState.lastTouchTime > 0) {
+        CFTimeInterval dt = now - _velocityState.lastTouchTime;
+        if (dt > 0) {
+            _velocityState.velocity = (touchPoint.y - _velocityState.lastTouchY) / dt;
+        }
+    }
+    _velocityState.lastTouchY = touchPoint.y;
+    _velocityState.lastTouchTime = now;
+
     delta -= handleFrame.origin.y;
     delta = fabs(delta);
 
@@ -531,13 +558,43 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
 
 - (void)gestureEnded
 {
-    self.scrollView.scrollEnabled = YES;
     self.dragging = NO;
 
-    [UIView animateWithDuration:0.5f delay:0.0f usingSpringWithDamping:1.0f initialSpringVelocity:0.5f options:0 animations:^{
-        [self layoutInScrollView];
-        [self layoutIfNeeded];
-    } completion:nil];
+    // If the finger rested before lifting, zero out the velocity
+    CFTimeInterval timeSinceLastTouch = CACurrentMediaTime() - _velocityState.lastTouchTime;
+    if (timeSinceLastTouch > 0.05) {
+        _velocityState.velocity = 0.0f;
+    }
+
+    CGFloat trackHeight = _trackView.frame.size.height;
+    CGFloat handleHeight = _handleView.frame.size.height;
+
+    // Start deceleration if there's meaningful velocity
+    if (fabs(_velocityState.velocity) > 0.1f) {
+        if (!_decelerationAnimator) {
+            self.decelerationAnimator = [[TOScrollBarDecelerationAnimator alloc] init];
+        }
+
+        __weak typeof(self) weakSelf = self;
+        _decelerationAnimator.completionHandler = ^{
+            weakSelf.scrollView.scrollEnabled = YES;
+            [UIView animateWithDuration:0.5f delay:0.0f usingSpringWithDamping:1.0f initialSpringVelocity:0.5f options:0 animations:^{
+                [weakSelf layoutInScrollView];
+                [weakSelf layoutIfNeeded];
+            } completion:nil];
+        };
+
+        [_decelerationAnimator startWithScrollView:self.scrollView
+                                    handleVelocity:_velocityState.velocity
+                                       trackHeight:trackHeight
+                                      handleHeight:handleHeight];
+    } else {
+        self.scrollView.scrollEnabled = YES;
+        [UIView animateWithDuration:0.5f delay:0.0f usingSpringWithDamping:1.0f initialSpringVelocity:0.5f options:0 animations:^{
+            [self layoutInScrollView];
+            [self layoutIfNeeded];
+        } completion:nil];
+    }
 }
 
 - (BOOL)pointInside:(CGPoint)point withEvent:(UIEvent *)event
