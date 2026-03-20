@@ -29,6 +29,12 @@ static const CGFloat kMinimumVelocity  = 1.0f;   // Stop threshold in content po
 static const CGFloat kMinimumHandleVelocity = 0.1f; // Minimum handle velocity to trigger deceleration
 static const CFTimeInterval kStaleThreshold = 0.05;  // If finger rested this long before lifting, no deceleration
 
+// Bounce-back: two-phase overshoot + settle
+static const CGFloat kRubberBandCoefficient = 0.15f;  // Tight overshoot (lower = less travel past boundary)
+static const CGFloat kMaxOvershoot = 80.0f;            // Cap overshoot in points
+static const CFTimeInterval kOvershootDuration = 0.15; // Phase 1: quick deceleration to peak
+static const CFTimeInterval kSettleDuration = 0.45;    // Phase 2: slow ease back to boundary
+
 // Velocity tracking state
 struct TOScrollBarVelocityState {
     CGFloat lastTouchY;
@@ -36,6 +42,15 @@ struct TOScrollBarVelocityState {
     CGFloat velocity;
 };
 typedef struct TOScrollBarVelocityState TOScrollBarVelocityState;
+
+// Bounce-back state
+struct TOScrollBarBounceState {
+    BOOL active;
+    CGFloat boundary;         // The edge position to return to
+    CGFloat peakOvershoot;    // Signed distance past boundary at peak
+    CFTimeInterval startTime; // Timestamp when bounce phase began
+};
+typedef struct TOScrollBarBounceState TOScrollBarBounceState;
 
 @interface TOScrollBarDecelerationCoordinator ()
 
@@ -50,6 +65,7 @@ typedef struct TOScrollBarVelocityState TOScrollBarVelocityState;
 
 @implementation TOScrollBarDecelerationCoordinator {
     TOScrollBarVelocityState _velocityState;
+    TOScrollBarBounceState _bounceState;
 }
 
 - (void)dealloc
@@ -145,38 +161,95 @@ typedef struct TOScrollBarVelocityState TOScrollBarVelocityState;
     CFTimeInterval dt = now - _lastTimestamp;
     _lastTimestamp = now;
 
-    // Apply exponential decay: v *= rate^(dt*1000)
-    // This makes deceleration frame-rate independent
-    _contentVelocity *= pow(kDecelerationRate, dt * 1000.0);
-
-    // Stop when velocity is negligible
-    if (fabs(_contentVelocity) < kMinimumVelocity) {
-        [self stop];
-        return;
-    }
-
     UIScrollView *scrollView = self.scrollView;
     if (scrollView == nil) {
         [self stop];
         return;
     }
 
-    // Compute new content offset
+    // Bounce-back phase: two-phase overshoot + settle
+    // Both phases use a critically damped spring curve for fluid motion:
+    // springEase(p, β) = (1 - exp(-β·p)·(1 + β·p)) / (1 - exp(-β)·(1 + β))
+    if (_bounceState.active) {
+        CFTimeInterval t = now - _bounceState.startTime;
+        CGFloat x;
+
+        if (t < kOvershootDuration) {
+            // Phase 1: quick spring ease-out to peak overshoot
+            CGFloat p = t / kOvershootDuration;
+            CGFloat beta = 6.0;
+            CGFloat eased = (1.0 - exp(-beta * p) * (1.0 + beta * p))
+                          / (1.0 - exp(-beta) * (1.0 + beta));
+            x = _bounceState.peakOvershoot * eased;
+        } else {
+            // Phase 2: slow spring ease-out back to boundary
+            CGFloat settleT = t - kOvershootDuration;
+            if (settleT >= kSettleDuration) {
+                [scrollView setContentOffset:CGPointMake(scrollView.contentOffset.x, _bounceState.boundary) animated:NO];
+                [self stop];
+                return;
+            }
+            CGFloat p = settleT / kSettleDuration;
+            CGFloat beta = 5.0;
+            CGFloat eased = (1.0 - exp(-beta * p) * (1.0 + beta * p))
+                          / (1.0 - exp(-beta) * (1.0 + beta));
+            x = _bounceState.peakOvershoot * (1.0 - eased);
+        }
+
+        [scrollView setContentOffset:CGPointMake(scrollView.contentOffset.x, _bounceState.boundary + x) animated:NO];
+        return;
+    }
+
+    // Deceleration phase: exponential decay
+    _contentVelocity *= pow(kDecelerationRate, dt * 1000.0);
+
+    if (fabs(_contentVelocity) < kMinimumVelocity) {
+        [self stop];
+        return;
+    }
+
     CGPoint offset = scrollView.contentOffset;
     offset.y += _contentVelocity * dt;
 
-    // Clamp to scrollable bounds
+    // Check scrollable bounds — transition to bounce if crossed
     CGFloat minY = -_topInset;
     CGFloat maxY = scrollView.contentSize.height + scrollView.adjustedContentInset.bottom - scrollView.frame.size.height;
     if (offset.y <= minY) {
-        offset.y = minY;
-        [self stop];
+        [self startBounceAtBoundary:minY inScrollView:scrollView atTime:now];
+        return;
     } else if (offset.y >= maxY) {
-        offset.y = maxY;
-        [self stop];
+        [self startBounceAtBoundary:maxY inScrollView:scrollView atTime:now];
+        return;
     }
 
     [scrollView setContentOffset:offset animated:NO];
+}
+
+- (void)startBounceAtBoundary:(CGFloat)boundary inScrollView:(UIScrollView *)scrollView atTime:(CFTimeInterval)now
+{
+    [scrollView setContentOffset:CGPointMake(scrollView.contentOffset.x, boundary) animated:NO];
+
+    // Calculate overshoot using rubber band formula, capped to kMaxOvershoot
+    CGFloat dCoeff = 1000.0 * log(kDecelerationRate);
+    CGFloat remainingDistance = fabs(-_contentVelocity / dCoeff);
+    CGFloat viewHeight = scrollView.frame.size.height;
+    CGFloat overshoot = (1.0 - (1.0 / ((remainingDistance * kRubberBandCoefficient / viewHeight) + 1.0))) * viewHeight;
+    overshoot = fmin(overshoot, kMaxOvershoot);
+
+    if (overshoot < 0.5) {
+        [self stop];
+        return;
+    }
+
+    // Sign matches scroll direction
+    CGFloat sign = (_contentVelocity > 0) ? 1.0 : -1.0;
+
+    _bounceState = (TOScrollBarBounceState){
+        .active = YES,
+        .boundary = boundary,
+        .peakOvershoot = overshoot * sign,
+        .startTime = now
+    };
 }
 
 - (void)stop
@@ -187,6 +260,7 @@ typedef struct TOScrollBarVelocityState TOScrollBarVelocityState;
     self.displayLink = nil;
     self.contentVelocity = 0;
     self.isDecelerating = NO;
+    _bounceState = (TOScrollBarBounceState){0};
 }
 
 @end
