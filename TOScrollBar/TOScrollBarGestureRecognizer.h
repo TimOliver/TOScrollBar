@@ -22,6 +22,8 @@
 
 #import <UIKit/UIKit.h>
 
+/// A custom gesture recognizer used to recognize when the user interacted with the scroll
+/// bar and to subsequently override any incoming gesture recognizers from the hosting scroll view.
 @interface TOScrollBarGestureRecognizer : UIGestureRecognizer
 
 @end
