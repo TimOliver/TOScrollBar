@@ -437,6 +437,9 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
     }
 
     // Begin velocity tracking (also stops any in-progress deceleration)
+    if (!_decelerationCoordinator) {
+        self.decelerationCoordinator = [[TOScrollBarDecelerationCoordinator alloc] init];
+    }
     [_decelerationCoordinator beginTracking];
 
     // Warm-up the feedback generator
@@ -542,10 +545,6 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
 - (void)gestureEnded
 {
     self.dragging = NO;
-
-    if (!_decelerationCoordinator) {
-        self.decelerationCoordinator = [[TOScrollBarDecelerationCoordinator alloc] init];
-    }
 
     [_decelerationCoordinator endTrackingWithScrollView:self.scrollView
                                            trackHeight:_trackView.frame.size.height
