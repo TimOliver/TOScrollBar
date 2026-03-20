@@ -23,6 +23,7 @@
 #import "TOScrollBar.h"
 #import "UIScrollView+TOScrollBar.h"
 #import "TOScrollBarGestureRecognizer.h"
+#import "TOScrollBarDecelerationCoordinator.h"
 #import <objc/message.h>
 
 /** Default values for the scroll bar */
@@ -76,6 +77,8 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
 @property (nonatomic, strong) UIImpactFeedbackGenerator *feedbackGenerator; // Taptic feedback for iPhone 7 and above
 
 @property (nonatomic, strong) TOScrollBarGestureRecognizer *gestureRecognizer; // Our custom recognizer for handling user interactions with the scroll bar
+
+@property (nonatomic, strong) TOScrollBarDecelerationCoordinator *decelerationCoordinator; // Tracks velocity and drives inertial scrolling after release
 
 @end
 
@@ -206,6 +209,7 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object
                         change:(NSDictionary<NSKeyValueChangeKey,id> *)change context:(void *)context
 {
+    [self _cancelDecelerationCoordinatorIfNeeded];
     [self updateStateForScrollView];
     if (self.hidden) { return; }
     [self layoutInScrollView];
@@ -432,6 +436,12 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
         return;
     }
 
+    // Begin velocity tracking (also stops any in-progress deceleration)
+    if (!_decelerationCoordinator) {
+        self.decelerationCoordinator = [[TOScrollBarDecelerationCoordinator alloc] init];
+    }
+    [_decelerationCoordinator beginTracking];
+
     // Warm-up the feedback generator
     [_feedbackGenerator prepare];
 
@@ -514,6 +524,9 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
 
     _handleView.frame = CGRectIntegral(handleFrame);
 
+    // Track velocity for deceleration on release
+    [_decelerationCoordinator trackTouchPoint:touchPoint.y];
+
     delta -= handleFrame.origin.y;
     delta = fabs(delta);
 
@@ -531,14 +544,26 @@ typedef struct TOScrollBarScrollViewState TOScrollBarScrollViewState;
 
 - (void)gestureEnded
 {
-    self.scrollView.scrollEnabled = YES;
     self.dragging = NO;
 
+    [_decelerationCoordinator endTrackingWithScrollView:self.scrollView
+                                           trackHeight:_trackView.frame.size.height
+                                          handleHeight:_handleView.frame.size.height
+                                              topInset:[self _navigationBarLargeTitleMaxY]];
+    self.scrollView.scrollEnabled = YES;
     [UIView animateWithDuration:0.5f delay:0.0f usingSpringWithDamping:1.0f initialSpringVelocity:0.5f options:0 animations:^{
         [self layoutInScrollView];
         [self layoutIfNeeded];
     } completion:nil];
 }
+
+- (void)_cancelDecelerationCoordinatorIfNeeded {
+    if (_decelerationCoordinator.isDecelerating && (_scrollView.isTracking || _scrollView.isDragging)) {
+        [_decelerationCoordinator stop];
+    }
+}
+
+#pragma mark - Hit Testing
 
 - (BOOL)pointInside:(CGPoint)point withEvent:(UIEvent *)event
 {
